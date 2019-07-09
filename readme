@@ -1,0 +1,23 @@
+
+dataset
+    --MOT17
+        --train
+        --test
+
+train:
+    python train_mot17.py
+    --> checkpoints
+
+eval:
+    python eval_mot17.py --type train
+    --> restult/train/txt
+    python eval_mot17.py --type test
+    --> result/test/txt
+
+tool:
+    python show_track.py --type train
+    result/train/txt --> result/train/avi
+    python show_track.py --type test
+    result/test/txt --> result/test/avi
+    python show_gt.py
+    ground_truth --> temp

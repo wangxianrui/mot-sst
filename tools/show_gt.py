@@ -16,10 +16,10 @@ def main(args):
     video_list = os.listdir(args.data_root)
 
     for video_name in video_list:
-        txt_file = args.data_root + video_name + '/gt/gt.txt'
-        avi_file = args.save_dir + video_name + '.avi'
-        img_dir = args.data_root + video_name + '/img1/'
-        temp_img = cv2.imread(img_dir + '000001.jpg')
+        txt_file = os.path.join(args.data_root, video_name, 'gt/gt.txt')
+        avi_file = os.path.join(args.save_dir, video_name + '.avi')
+        img_dir = os.path.join(args.data_root, video_name, 'img1')
+        temp_img = cv2.imread(os.path.join(img_dir + '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
 

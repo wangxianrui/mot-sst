@@ -13,13 +13,15 @@ from tqdm import tqdm
 def main(args):
     colorList = get_spaced_colors(100)
     random.shuffle(colorList)
-    txt_list = os.listdir(args.txt_dir)
+    if not os.path.exists(os.path.join(args.rresult_dir, args.type, 'avi')):
+        os.makedirs(os.path.join(args.rresult_dir, args.type, 'avi'))
 
+    txt_list = os.listdir(os.path.join(args.result_dir, args.type, 'txt'))
     for txt_name in txt_list:
-        txt_file = args.txt_dir + txt_name
-        avi_file = args.save_dir + txt_name[:-4] + '.avi'
-        img_dir = os.path.join(args.data_root, txt_name[:-4], 'img1') + '/'
-        temp_img = cv2.imread(img_dir + '000001.jpg')
+        txt_file = os.path.join(args.result_dir, args.type, 'txt', txt_name)
+        avi_file = os.path.join(args.result_dir, args.type, 'avi' + txt_name[:-4] + '.avi')
+        img_dir = os.path.join(args.data_root, args.type, txt_name[:-4], 'img1')
+        temp_img = cv2.imread(os.path.join(img_dir + '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
 
@@ -77,15 +79,9 @@ def get_spaced_colors(n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Images from Results')
-    parser.add_argument('--data_root', default='dataset/MOT17/test/')
-    parser.add_argument('--txt_dir', default='result/texts/')
-    parser.add_argument('--save_dir', default='result/avi/')
+    parser.add_argument('--data_root', default='dataset/MOT17/')
+    parser.add_argument('--result_dir', default='result/')
+    parser.add_argument('--type', default='train/')
     args = parser.parse_args()
-
-    if not os.path.exists(args.data_root) or not os.path.exists(args.txt_dir):
-        print('error...')
-        exit()
-    if not os.path.exists(args.save_dir):
-        os.makedirs(args.save_dir)
 
     main(args)
