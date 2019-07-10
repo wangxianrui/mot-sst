@@ -37,6 +37,5 @@ class Config:
     log_setp = 500
     save_step = 1000
     '''eval'''
-    resume = 'pretrained/sst300_0712_83000.pth'
-    # resume = 'checkpoints/sst300_0712_83000.pth'
+    resume = 'pretrained/sst900_final_.pth'
     result_dir = 'result/'

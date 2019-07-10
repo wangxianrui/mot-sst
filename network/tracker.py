@@ -584,7 +584,7 @@ class SSTTracker:
 
     def load_model(self):
         # load the model
-        self.sst = build_sst('test', 900)
+        self.sst = build_sst('test')
         if self.cuda:
             self.sst.load_state_dict(torch.load(Config.resume))
             self.sst = self.sst.cuda()

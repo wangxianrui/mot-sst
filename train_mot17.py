@@ -88,9 +88,9 @@ def train():
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
                 print('saving checkpoint {}'.format(ckpt_name))
-                torch.save(net.state_dict(), os.path.join(Config.ckpt_dir, ckpt_name))
+                torch.save(net.module.state_dict(), os.path.join(Config.ckpt_dir, ckpt_name))
 
-    torch.save(net.state_dict(), os.path.join(Config.ckpt_dir, 'sst900_final.pth'))
+    torch.save(net.module.state_dict(), os.path.join(Config.ckpt_dir, 'sst900_final.pth'))
     writer.close()
 
 
