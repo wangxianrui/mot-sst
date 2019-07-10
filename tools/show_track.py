@@ -19,7 +19,7 @@ def main(args):
     txt_list = os.listdir(os.path.join(args.result_dir, args.type, 'txt'))
     for txt_name in txt_list:
         txt_file = os.path.join(args.result_dir, args.type, 'txt', txt_name)
-        avi_file = os.path.join(args.result_dir, args.type, 'avi' + txt_name[:-4] + '.avi')
+        avi_file = os.path.join(args.result_dir, args.type, 'avi', txt_name[:-4] + '.avi')
         img_dir = os.path.join(args.data_root, args.type, txt_name[:-4], 'img1')
         temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
