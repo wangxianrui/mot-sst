@@ -13,15 +13,15 @@ from tqdm import tqdm
 def main(args):
     colorList = get_spaced_colors(100)
     random.shuffle(colorList)
-    if not os.path.exists(os.path.join(args.rresult_dir, args.type, 'avi')):
-        os.makedirs(os.path.join(args.rresult_dir, args.type, 'avi'))
+    if not os.path.exists(os.path.join(args.result_dir, args.type, 'avi')):
+        os.makedirs(os.path.join(args.result_dir, args.type, 'avi'))
 
     txt_list = os.listdir(os.path.join(args.result_dir, args.type, 'txt'))
     for txt_name in txt_list:
         txt_file = os.path.join(args.result_dir, args.type, 'txt', txt_name)
         avi_file = os.path.join(args.result_dir, args.type, 'avi' + txt_name[:-4] + '.avi')
         img_dir = os.path.join(args.data_root, args.type, txt_name[:-4], 'img1')
-        temp_img = cv2.imread(os.path.join(img_dir + '000001.jpg'))
+        temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
 
@@ -31,7 +31,7 @@ def main(args):
         n_frame = max(res_raw[:, 0])
         print('txt_name: {} || total number of frames: {}'.format(txt_name, n_frame))
         for t in tqdm(range(1, int(n_frame))):
-            img_name = img_dir + str(t).zfill(6) + '.jpg'
+            img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
             img = cv2.imread(img_name)
             overlay = img.copy()
             row_ind = np.where(res_raw[:, 0] == t)[0]
