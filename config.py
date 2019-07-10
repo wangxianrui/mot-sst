@@ -34,8 +34,8 @@ class Config:
     max_epoch = 120
     momentum = 0.9
     weight_decay = 5e-4
-    log_setp = 200
-    save_step = 500
+    log_setp = 500
+    save_step = 1000
     '''eval'''
     resume = 'pretrained/sst300_0712_83000.pth'
     # resume = 'checkpoints/sst300_0712_83000.pth'
