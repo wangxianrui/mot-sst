@@ -175,7 +175,6 @@ class TrackerConfig:
     @staticmethod
     def set_configure(all_choice):
         min_iou_frame_gaps = [
-            # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -219,8 +218,8 @@ class TrackerConfig:
     @staticmethod
     def get_all_choices():
         # return [(1, 1, 0, 0, 4, 2)]
-        return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5) for i3 in range(5) for i4 in range(5) for
-                i5 in range(5) for i6 in range(5)]
+        return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5) for i3 in range(5) for i4 in range(5)
+                for i5 in range(5) for i6 in range(5)]
 
     @staticmethod
     def get_all_choices_decay():
@@ -272,7 +271,8 @@ class FeatureRecorder:
             self.all_similarity[frame_index] = {}
             for pre_index in self.all_frame_index[:-1]:
                 delta = pow(TrackerConfig.decay, (frame_index - pre_index) / 3.0)
-                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], features,
+                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index],
+                                                              features,
                                                               fill_up_column=False)
                 self.all_similarity[frame_index][pre_index] = pre_similarity * delta
 
@@ -544,8 +544,8 @@ class Tracks:
                 txt = '({}, {})'.format(t.id, t.nodes[-1].id)
                 image = cv2.putText(image, txt, (int(b[0] * w), int((b[1]) * h)), cv2.FONT_HERSHEY_SIMPLEX, 1, t.color,
                                     3)
-                image = cv2.rectangle(image, (int(b[0] * w), int((b[1]) * h)),
-                                      (int((b[0] + b[2]) * w), int((b[1] + b[3]) * h)), t.color, 2)
+                image = cv2.rectangle(image, (int(b[0] * w), int((b[1]) * h)), (int(
+                    (b[0] + b[2]) * w), int((b[1] + b[3]) * h)), t.color, 2)
 
         # draw line
         for t in self.tracks:

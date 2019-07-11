@@ -31,8 +31,7 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         return cv2.imread(self.image_format.format(index))
 
     def __getitem__(self, item):
-        return (self.get_image_by_index(item + 1),
-                self.get_detection_by_index(item + 1))
+        return (self.get_image_by_index(item + 1), self.get_detection_by_index(item + 1))
 
 
 class DataTransform:

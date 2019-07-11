@@ -236,7 +236,6 @@ class MOTTrainDataset(data.Dataset):
         # 1. init all the variables
         self.mot_root = mot_root
         self.transform = transform
-        self.type = type
         self.detector = detector
         self.max_object = max_object
 

@@ -9,17 +9,20 @@ class SSTLoss(torch.nn.Module):
         self.max_object = Config.max_object
 
     def forward(self, predict, target, mask0, mask1):
-        """
-        :param predict: b, 1, N+1, N+1
-        :param target: b, 1, N+1, N+1
-        :param mask0: pre mask b, 1, N+1
-        :param mask1: next mask b, 1, N+1
-        :return:
-        mask, predict, target:  N+1, N+1
+        '''
+        @description: 
+        @param {
+            param predict: b, 1, N+1, N+1
+            param target: b, 1, N+1, N+1
+            param mask0: pre mask b, 1, N+1
+            param mask1: next mask b, 1, N+1
+        } 
+        @return: 
+         mask, predict, target:  N+1, N+1
         *_pre:  N, N+1
         *_next: N+1, N
         *_union: N, N
-        """
+        '''
         mask = (mask0.unsqueeze(3) * mask1.unsqueeze(2))
         mask_pre = mask[:, :, :-1, :].clone()
         mask_next = mask[:, :, :, :-1].clone()
@@ -53,8 +56,8 @@ class SSTLoss(torch.nn.Module):
             loss_next = 0
         if target_union_num > 0:
             loss_union = -(target_union * torch.log(predict_union)).sum() / target_union_num
-            loss_sim = (target_union * torch.abs(
-                predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
+            loss_sim = (target_union *
+                        torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
         else:
             loss_union = 0
             loss_sim = 0

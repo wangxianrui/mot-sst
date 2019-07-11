@@ -26,10 +26,8 @@ def jaccard_numpy(box_a, box_b):
         jaccard overlap: Shape: [box_a.shape[0], box_a.shape[1]]
     """
     inter = intersect(box_a, box_b)
-    area_a = ((box_a[:, 2] - box_a[:, 0]) *
-              (box_a[:, 3] - box_a[:, 1]))  # [A,B]
-    area_b = ((box_b[2] - box_b[0]) *
-              (box_b[3] - box_b[1]))  # [A,B]
+    area_a = ((box_a[:, 2] - box_a[:, 0]) * (box_a[:, 3] - box_a[:, 1]))  # [A,B]
+    area_b = ((box_b[2] - box_b[0]) * (box_b[3] - box_b[1]))  # [A,B]
     union = area_a + area_b - inter
     return inter / union  # [A,B]
 
@@ -67,10 +65,9 @@ class Lambda(object):
 
 
 class ConvertFromInts(object):
-    def __call__(self, img_pre, img_next,
-                 boxes_pre=None, boxes_next=None, labels=None):
+    def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         return img_pre.astype(np.float32), img_next.astype(np.float32), \
-               boxes_pre, boxes_next, labels
+            boxes_pre, boxes_next, labels
 
 
 class SubtractMeans(object):
@@ -148,9 +145,7 @@ class RandomHue(object):
 
 class RandomLightingNoise(object):
     def __init__(self):
-        self.perms = ((0, 1, 2), (0, 2, 1),
-                      (1, 0, 2), (1, 2, 0),
-                      (2, 0, 1), (2, 1, 0))
+        self.perms = ((0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0))
 
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         if random.randint(2):
@@ -235,9 +230,7 @@ class RandomSampleCrop(object):
 
         #  IoU (jaccard calculateoverlap) b/t the cropped and gt boxes
 
-        overlap = jaccard_numpy(
-            boxes[:, :],
-            rect)
+        overlap = jaccard_numpy(boxes[:, :], rect)
 
         # is min and max overlap constraint satisfied? if not try again
         if overlap.min() < min_iou and max_iou < overlap.max():
@@ -275,21 +268,19 @@ class RandomSampleCrop(object):
         h, w = labels.shape
         if isPre:
             current_labels = current_labels[np.logical_not(mask), :]
-            current_labels = np.pad(current_labels, [[0, h - current_labels.shape[0]], [0, 0]], mode='constant',
-                                    constant_values=0.0)
+            current_labels = np.pad(current_labels, [[0, h - current_labels.shape[0]], [0, 0]], \
+                mode='constant', constant_values=0.0)
         else:
             current_labels = current_labels[:, np.logical_not(mask)]
-            current_labels = np.pad(current_labels, [[0, 0], [0, w - current_labels.shape[1]]], mode='constant',
-                                    constant_values=0.0)
+            current_labels = np.pad(current_labels, [[0, 0], [0, w - current_labels.shape[1]]], \
+                mode='constant', constant_values=0.0)
 
         # should we use the box left and top corner or the crop's
-        current_boxes[:, :2] = np.maximum(current_boxes[:, :2],
-                                          rect[:2])
+        current_boxes[:, :2] = np.maximum(current_boxes[:, :2], rect[:2])
         # adjust to crop (by substracting crop's left,top)
         current_boxes[:, :2] -= rect[:2]
 
-        current_boxes[:, 2:] = np.minimum(current_boxes[:, 2:],
-                                          rect[2:])
+        current_boxes[:, 2:] = np.minimum(current_boxes[:, 2:], rect[2:])
         # adjust to crop (by substracting crop's left,top)
         current_boxes[:, 2:] -= rect[:2]
 
@@ -326,8 +317,8 @@ class RandomSampleCrop(object):
                 if res_pre is None:
                     continue
 
-                res_next = self.crop(img_next, boxes_next, res_pre[2], mode, min_iou, max_iou, w, h, left, top,
-                                     isPre=False)
+                res_next = self.crop(img_next, boxes_next, res_pre[2], mode, \
+                    min_iou, max_iou, w, h, left, top, isPre=False)
                 if res_next is None:
                     continue
                 else:
@@ -339,9 +330,7 @@ class Expand(object):
         self.mean = mean
 
     def expand(self, image, height, width, depth, ratio, left, top):
-        expand_image = np.zeros(
-            (int(height * ratio), int(width * ratio), depth),
-            dtype=image.dtype)
+        expand_image = np.zeros((int(height * ratio), int(width * ratio), depth), dtype=image.dtype)
         expand_image[:, :, :] = self.mean
         expand_image[int(top):int(top + height), int(left):int(left + width)] = image
         return expand_image
@@ -414,14 +403,8 @@ class SwapChannels(object):
 
 class PhotometricDistort(object):
     def __init__(self):
-        self.pd = [
-            RandomContrast(),
-            ConvertColor(transform='HSV'),
-            RandomSaturation(),
-            RandomHue(),
-            ConvertColor(current='HSV', transform='BGR'),
-            RandomContrast()
-        ]
+        self.pd = [RandomContrast(), ConvertColor(transform='HSV'), RandomSaturation(), \
+            RandomHue(), ConvertColor(current='HSV', transform='BGR'), RandomContrast()]
         self.rand_brightness = RandomBrightness()
         self.rand_light_noise = RandomLightingNoise()
 
@@ -488,10 +471,7 @@ class ResizeShuffleBoxes(object):
 
         mask_pre = np.append(mask_pre, [True])  # 61
         mask_next = np.append(mask_next, [True])  # 61
-        return img_pre, img_next, \
-               [boxes_pre, mask_pre], \
-               [boxes_next, mask_next], \
-               labels
+        return img_pre, img_next, [boxes_pre, mask_pre], [boxes_next, mask_next], labels
 
 
 class FormatBoxes(object):
@@ -508,21 +488,9 @@ class FormatBoxes(object):
         '''
         if not self.keep_box:
             # convert the center to [-1, 1]
-            f = lambda boxes: np.expand_dims(
-                np.expand_dims(
-                    (boxes[:, :2] + boxes[:, 2:]) - 1,
-                    axis=1
-                ),
-                axis=1
-            )
+            f = lambda boxes: np.expand_dims(np.expand_dims((boxes[:, :2] + boxes[:, 2:]) - 1, axis=1), axis=1)
         else:
-            f = lambda boxes: np.expand_dims(
-                np.expand_dims(
-                    np.concatenate([(boxes[:, :2] + boxes[:, 2:]) - 1, boxes[:, 2:6]], axis=1),
-                    axis=1
-                ),
-                axis=1
-            )
+            f = lambda boxes: np.expand_dims(np.expand_dims(np.concatenate([(boxes[:, :2] + boxes[:, 2:]) - 1, boxes[:, 2:6]], axis=1), axis=1), axis=1)
 
         # remove inf
         boxes_pre[0] = f(boxes_pre[0])
@@ -555,19 +523,9 @@ class SSJTrainAugment(object):
         self.mean = mean
         self.size = size
 
-        self.augment = Compose([
-            ConvertFromInts(),
-            PhotometricDistort(),
-            Expand(self.mean),
-            RandomSampleCrop(),
-            RandomMirror(),
-            ToPercentCoords(),
-            Resize(self.size),
-            SubtractMeans(self.mean),
-            ResizeShuffleBoxes(),
-            FormatBoxes(),
-            ToTensor()
-        ])
+        self.augment = Compose([ConvertFromInts(), PhotometricDistort(), Expand(self.mean), \
+            RandomSampleCrop(), RandomMirror(), ToPercentCoords(), \
+            Resize(self.size), SubtractMeans(self.mean), ResizeShuffleBoxes(), FormatBoxes(), ToTensor()])
 
     def __call__(self, img_pre, img_next, boxes_pre, boxes_next, labels):
         return self.augment(img_pre, img_next, boxes_pre, boxes_next, labels)
@@ -577,15 +535,7 @@ class SSJEvalAugment(object):
     def __init__(self, size, mean):
         self.mean = mean
         self.size = size
-        self.augment = Compose([
-            ConvertFromInts(),
-            ToPercentCoords(),
-            Resize(self.size),
-            SubtractMeans(self.mean),
-            ResizeShuffleBoxes(),
-            FormatBoxes(),
-            ToTensor()
-        ])
+        self.augment = Compose([ConvertFromInts(), ToPercentCoords(), Resize(self.size), SubtractMeans(self.mean), ResizeShuffleBoxes(), FormatBoxes(), ToTensor()])
 
     def __call__(self, img_pre, img_next, boxes_pre, boxes_next, labels):
         return self.augment(img_pre, img_next, boxes_pre, boxes_next, labels)

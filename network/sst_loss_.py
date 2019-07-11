@@ -40,15 +40,15 @@ class SSTLoss(torch.nn.Module):
         target_num_next = target_next.sum()
         target_num_union = target_union.sum()
 
-        # todo: remove the last row negative effect
+        # TODO: remove the last row negative effect
         if int(target_num_pre.item()):
-            loss_pre = - (target_pre * torch.log(predict_pre)).sum() / target_num_pre
+            loss_pre = -(target_pre * torch.log(predict_pre)).sum() / target_num_pre
         else:
-            loss_pre = - (target_pre * torch.log(predict_pre)).sum()
+            loss_pre = -(target_pre * torch.log(predict_pre)).sum()
         if int(target_num_next.item()):
-            loss_next = - (target_next * torch.log(predict_next)).sum() / target_num_next
+            loss_next = -(target_next * torch.log(predict_next)).sum() / target_num_next
         else:
-            loss_next = - (target_next * torch.log(predict_next)).sum()
+            loss_next = -(target_next * torch.log(predict_next)).sum()
         if int(target_num_pre.item()) and int(target_num_next.item()):
             loss = -(target_pre * torch.log(predict_all)).sum() / target_num_pre
         else:
@@ -64,8 +64,8 @@ class SSTLoss(torch.nn.Module):
         indexes_pre = indexes_pre[:, :, :-1]
         mask_pre_num = mask_pre[:, :, :-1].sum().item()
         if mask_pre_num:
-            accuracy_pre = (indexes_pre[mask_pre[:, :, :-1]] == indexes_[
-                mask_pre[:, :, :-1]]).float().sum() / mask_pre_num
+            accuracy_pre = (
+                indexes_pre[mask_pre[:, :, :-1]] == indexes_[mask_pre[:, :, :-1]]).float().sum() / mask_pre_num
         else:
             accuracy_pre = (indexes_pre[mask_pre[:, :, :-1]] == indexes_[mask_pre[:, :, :-1]]).float().sum() + 1
 
@@ -75,8 +75,8 @@ class SSTLoss(torch.nn.Module):
         indexes_next = indexes_next[:, :, :-1]
         mask_next_num = mask_next[:, :, :-1].sum().item()
         if mask_next_num:
-            accuracy_next = (indexes_next[mask_next[:, :, :-1]] == indexes_[
-                mask_next[:, :, :-1]]).float().sum() / mask_next_num
+            accuracy_next = (
+                indexes_next[mask_next[:, :, :-1]] == indexes_[mask_next[:, :, :-1]]).float().sum() / mask_next_num
         else:
             accuracy_next = (indexes_next[mask_next[:, :, :-1]] == indexes_[mask_next[:, :, :-1]]).float().sum() + 1
 

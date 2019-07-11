@@ -28,8 +28,8 @@ def train():
     # prepare dataset
     print('loading dataset...')
     dataset = MOTTrainDataset(Config.data_root, SSJTrainAugment(Config.sst_dim, Config.mean_pixel))
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, num_workers=Config.num_workers,
-                                             collate_fn=collate_fn)
+    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, \
+        num_workers=Config.num_workers, collate_fn=collate_fn)
 
     # create model
     net = torch.nn.DataParallel(build_sst('train'))
@@ -42,8 +42,8 @@ def train():
 
     # criterion && optimizer
     criterion = SSTLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum,
-                                weight_decay=Config.weight_decay)
+    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, \
+        weight_decay=Config.weight_decay)
 
     for epoch in range(Config.max_epoch):
         if epoch in Config.lr_epoch:
@@ -70,6 +70,7 @@ def train():
             # TODO move float() to dataset
             valid_pre = valid_pre.float()
             valid_next = valid_next.float()
+
             loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
                 criterion(out, labels, valid_pre, valid_next)
             optimizer.zero_grad()
@@ -78,8 +79,8 @@ def train():
             epoch_loss += [loss.data.cpu()]
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'
-                      .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
+                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}' \
+                    .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)

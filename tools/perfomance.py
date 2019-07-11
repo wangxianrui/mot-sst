@@ -9,7 +9,6 @@
 #
 # ===========================================================================
 
-
 import os
 import cv2
 import argparse
@@ -60,41 +59,35 @@ def main(args):
                     th = np.zeros_like(iou)
                     th[np.where(iou <= args.threshold)] = 1.0
                     mask_IOU[i, :] = th
-
                     # distance
                     distance_matrix.append(1.0 - iou)
 
                 distance_matrix = np.vstack(distance_matrix)
-
                 distance_matrix[np.where(mask_IOU == 1.0)] = np.nan
-
-                acc.update(
-                    gt_ids,  # number of objects = matrix width
-                    id_track,  # number of hypothesis = matrix height
-                    np.transpose(distance_matrix)
-                )
-
+                acc.update(gt_ids, id_track, np.transpose(distance_matrix))
             else:
-                acc.update(
-                    gt_ids,  # number of objects = matrix width
-                    [],  # number of hypothesis = matrix height
-                    [[], []]
-                )
+                acc.update(gt_ids, [], [[], []])
 
-        summary = mh.compute(acc, metrics=['motp', 'mota', 'num_false_positives', 'num_misses',
-                                           'num_switches', 'num_objects', 'num_matches'], name='final')
+        summary = mh.compute(
+            acc,
+            metrics=['motp', 'mota', 'num_false_positives', 'num_misses', 'num_switches', 'num_objects', 'num_matches'],
+            name='final')
         total_fp += float(summary['num_false_positives'].iloc[0])
         total_fn += float(summary['num_misses'].iloc[0])
         total_idsw += float(summary['num_switches'].iloc[0])
         total_num_objects += float(summary['num_objects'].iloc[0])
         total_matched += float(summary['num_matches'].iloc[0])
         sum_distance += float(summary['motp'].iloc[0]) * float(summary['num_matches'].iloc[0])
-        strsummary = motmetrics.io.render_summary(
-            summary,
-            formatters={'mota': '{:.2%}'.format},
-            namemap={'motp': 'MOTP', 'mota': 'MOTA', 'num_false_positives': 'FP', 'num_misses': 'FN',
-                     'num_switches': "ID_SW", 'num_objects': 'num_objects'}
-        )
+        strsummary = motmetrics.io.render_summary(summary,
+                                                  formatters={'mota': '{:.2%}'.format},
+                                                  namemap={
+                                                      'motp': 'MOTP',
+                                                      'mota': 'MOTA',
+                                                      'num_false_positives': 'FP',
+                                                      'num_misses': 'FN',
+                                                      'num_switches': "ID_SW",
+                                                      'num_objects': 'num_objects'
+                                                  })
         print(strsummary)
 
     print("avg mota: {:.3f} %".format(100.0 * (1.0 - (total_idsw + total_fn + total_fp) / total_num_objects)))

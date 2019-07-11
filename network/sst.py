@@ -8,10 +8,8 @@ copyright: shijie Sun (shijieSun@chd.edu.cn)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-# from config.config import config
 from config import Config
 import os
-
 
 # todo: add more extra columns to use the mogranic method
 # todo: label the mot17 data and train the detector.
@@ -269,8 +267,7 @@ def add_extras(cfg, i, batch_norm=True):
                 else:
                     layers += [conv2d, nn.ReLU(inplace=True)]
             else:
-                conv2d = nn.Conv2d(in_channels, v,
-                                   kernel_size=(1, 3)[flag])
+                conv2d = nn.Conv2d(in_channels, v, kernel_size=(1, 3)[flag])
                 if batch_norm:
                     layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
                 else:
