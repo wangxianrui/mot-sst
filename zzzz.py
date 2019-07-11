@@ -1,4 +1,5 @@
-import numpy as np
+import torch
 
-data = np.random.rand(3, 4)
-np.savetxt('test', data, fmt='%.4f', delimiter=',')
+x = torch.randint(-1, 1, (1, 10))
+y = torch.randint(-1, 1, (1, 10))
+print(x == y)

@@ -41,7 +41,7 @@ def train():
     net.train()
 
     # criterion && optimizer
-    criterion = SSTLoss(Config.use_cuda)
+    criterion = SSTLoss()
     optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum,
                                 weight_decay=Config.weight_decay)
 
@@ -66,7 +66,11 @@ def train():
 
             # forward
             out = net(img_pre, img_next, boxes_pre, boxes_next, valid_pre, valid_next)
-            loss_pre, loss_next, loss_similarity, loss, accuracy_pre, accuracy_next, accuracy, predict_indexes = \
+
+            # TODO move float() to dataset
+            valid_pre = valid_pre.float()
+            valid_next = valid_next.float()
+            loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
                 criterion(out, labels, valid_pre, valid_next)
             optimizer.zero_grad()
             loss.backward()
@@ -81,7 +85,7 @@ def train():
                 writer.add_scalar('loss/loss', loss.item(), log_index)
                 writer.add_scalar('loss/loss_pre', loss_pre.item(), log_index)
                 writer.add_scalar('loss/loss_next', loss_next.item(), log_index)
-                writer.add_scalar('loss/loss_similarity', loss_similarity.item(), log_index)
+                writer.add_scalar('loss/loss_sim', loss_sim.item(), log_index)
                 writer.add_scalar('accuracy/accuracy', accuracy.item(), log_index)
                 writer.add_scalar('accuracy/accuracy_pre', accuracy_pre.item(), log_index)
                 writer.add_scalar('accuracy/accuracy_next', accuracy_next.item(), log_index)
