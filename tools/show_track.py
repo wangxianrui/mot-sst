@@ -25,7 +25,7 @@ def main(args):
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
 
-        res_raw = pd.read_csv(txt_file, sep=' ', header=None)
+        res_raw = pd.read_csv(txt_file, sep=',', header=None)
         res_raw = np.array(res_raw).astype(np.float32)
         res_raw[:, 0:6] = np.array(res_raw[:, 0:6]).astype(np.int)
         n_frame = max(res_raw[:, 0])

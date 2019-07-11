@@ -78,7 +78,7 @@ def eval(args):
                 if t.age == 1:
                     b = n.get_box(tracker.frame_index - 1, tracker.recorder)
                     result.append([i] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
-        np.savetxt(res_file, np.int_(result), fmt='%i')
+        np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
         print('finished processing {}'.format(res_file))
     print('total time {}'.format(timer.total_time))
     print('average time {}'.format(timer.average_time))

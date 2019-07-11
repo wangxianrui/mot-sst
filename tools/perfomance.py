@@ -201,7 +201,7 @@ def read_txt_predictionV2(textpath):
         frames = {}
         for line in f_csv:
             if len(line) == 1:
-                line = line[0].split(' ')
+                line = line[0].split(',')
             if len(line) <= 5:
                 continue
             if not (line[0]) in frames:

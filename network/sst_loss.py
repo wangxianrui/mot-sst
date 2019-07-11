@@ -14,12 +14,11 @@ class SSTLoss(torch.nn.Module):
         mask_next = mask1[:, :, :]
         mask0 = mask0.unsqueeze(3).repeat(1, 1, 1, self.max_object + 1)
         mask1 = mask1.unsqueeze(2).repeat(1, 1, self.max_object + 1, 1)
-
         if self.use_gpu:
             mask0 = mask0.cuda()
             mask1 = mask1.cuda()
 
-        mask_region = (mask0 * mask1).float()  # the valid position mask
+        mask_region = (mask0 * mask1).float()
         mask_region_pre = mask_region.clone()  # note: should use clone (fix this bug)
         mask_region_pre[:, :, self.max_object, :] = 0
         mask_region_next = mask_region.clone()  # note: should use clone (fix this bug)

@@ -1,6 +1,6 @@
 class Config:
     '''common'''
-    data_root = 'f:/dataset/MOT17/'
+    data_root = 'dataset/MOT17/'
     log_dir = 'logs/'
     ckpt_dir = 'checkpoints/'
     use_cuda = False
@@ -18,7 +18,7 @@ class Config:
     backbone = 'pretrained/vgg16_reducedfc.pth'
     batch_size = 1
     num_workers = 8
-    detector = 'DPM'  # DPM, SDP, FRCNN
+    detector = 'FRCNN'  # DPM, SDP, FRCNN
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 30
