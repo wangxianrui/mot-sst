@@ -10,7 +10,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 # from config.config import config
 from config import Config
-import numpy as np
 import os
 
 
@@ -47,29 +46,32 @@ class SST(nn.Module):
         self.false_constant = Config.false_constant
         self.use_gpu = use_gpu
 
-    def forward(self, x_pre, x_next, l_pre, l_next, valid_pre=None, valid_next=None):
+    def forward(self, x_pre, x_next, b_pre, b_next, valid_pre=None, valid_next=None):
         '''
         the sst net forward stream
         :param x_pre:  the previous image, (1, 3, 900, 900) FT
         :param x_next: the next image,  (1, 3, 900, 900) FT
-        :param l_pre: the previous box center, (1, 60, 1, 1, 2) FT
-        :param l_next: the next box center, (1, 60, 1, 1, 2) FT
+        :param b_pre: the previous box center, (1, 60, 1, 1, 2) FT
+        :param b_next: the next box center, (1, 60, 1, 1, 2) FT
         :param valid_pre: the previous box mask, (1, 1, 61) BT
         :param valid_next: the next box mask, (1, 1, 61) BT
         :return: the similarity matrix
         '''
         sources_pre = list()
         sources_next = list()
-        x_pre = self.forward_vgg(x_pre, self.vgg, sources_pre)
-        x_next = self.forward_vgg(x_next, self.vgg, sources_next)
 
-        x_pre = self.forward_extras(x_pre, self.extras, sources_pre)
-        x_next = self.forward_extras(x_next, self.extras, sources_next)
+        # get source
+        vgg_pre = self.forward_vgg(x_pre, self.vgg, sources_pre)
+        vgg_next = self.forward_vgg(x_next, self.vgg, sources_next)
+        self.forward_extras(vgg_pre, self.extras, sources_pre)
+        self.forward_extras(vgg_next, self.extras, sources_next)
 
-        x_pre = self.forward_selector_stacker1(sources_pre, l_pre, self.selector)
-        x_next = self.forward_selector_stacker1(sources_next, l_next, self.selector)
+        # select feature from source with bbox
+        feature_pre = self.forward_selector_stacker1(sources_pre, b_pre, self.selector)
+        feature_next = self.forward_selector_stacker1(sources_next, b_next, self.selector)
 
-        x = self.forward_stacker2(x_pre, x_next)
+        #
+        x = self.forward_stacker2(feature_pre, feature_next)
         x = self.final_dp(x)
 
         x = self.forward_final(x, self.final_net)
@@ -113,21 +115,19 @@ class SST(nn.Module):
         next_rest_num = self.max_object - xn.shape[1]
         pre_num = xp.shape[1]
         next_num = xn.shape[1]
-        x = self.forward_stacker2(
-            self.resize_dim(xp, pre_rest_num, dim=1),
-            self.resize_dim(xn, next_rest_num, dim=1)
-        )
 
+        x = self.forward_stacker2(self.resize_dim(xp, pre_rest_num, dim=1), self.resize_dim(xn, next_rest_num, dim=1))
         x = self.final_dp(x)
-        # [B, N, N, 1]
         x = self.forward_final(x, self.final_net)
         x = x.contiguous()
+
         # add zero
         if next_num < self.max_object:
             x[0, 0, :, next_num:] = 0
         if pre_num < self.max_object:
             x[0, 0, pre_num:, :] = 0
         x = x[0, 0, :]
+
         # add false unmatched row and column
         x = self.resize_dim(x, 1, dim=0, constant=self.false_constant)
         x = self.resize_dim(x, 1, dim=1, constant=self.false_constant)
@@ -144,19 +144,14 @@ class SST(nn.Module):
         x_t = x_t[:, col_slice]
 
         x = torch.zeros(pre_num, next_num + 1)
-        # x[0:pre_num, 0:next_num] = torch.max(x_f[0:pre_num, 0:next_num], x_t[0:pre_num, 0:next_num])
         x[0:pre_num, 0:next_num] = (x_f[0:pre_num, 0:next_num] + x_t[0:pre_num, 0:next_num]) / 2.0
         x[:, next_num:next_num + 1] = x_f[:pre_num, next_num:next_num + 1]
         if fill_up_column and pre_num > 1:
             x = torch.cat([x, x[:, next_num:next_num + 1].repeat(1, pre_num - 1)], dim=1)
-
         if self.use_gpu:
             y = x.data.cpu().numpy()
-            # del x, x_f, x_t
-            # torch.cuda.empty_cache()
         else:
             y = x.data.numpy()
-
         return y
 
     def forward_vgg(self, x, vgg, sources):
@@ -175,33 +170,25 @@ class SST(nn.Module):
 
     def forward_extras(self, x, extras, sources):
         for k, v in enumerate(extras):
-            x = v(x)  # x = F.relu(v(x), inplace=True)        #done: relu is unnecessary.
-            if k % 6 == 3:  # done: should select the output of BatchNormalization (-> k%6==2)
+            x = v(x)
+            if k % 6 == 3:
                 sources.append(x)
         return x
 
-    def forward_selector_stacker1(self, sources, labels, selector):
+    def forward_selector_stacker1(self, sources, bbox, selector):
         '''
         :param sources: [B, C, H, W]
-        :param labels: [B, N, 1, 1, 2]
+        :param bbox: [B, N, 1, 1, 2]
         :return: the connected feature
         '''
-        sources = [
-            F.relu(net(x), inplace=True) for net, x in zip(selector, sources)
-        ]
+        sources = [F.relu(net(x), inplace=True) for net, x in zip(selector, sources)]
 
         res = list()
-        for label_index in range(labels.size(1)):
-            label_res = list()
+        for box_index in range(bbox.size(1)):
+            box_res = list()
             for source_index in range(len(sources)):
-                # [N, B, C, 1, 1]
-                label_res.append(
-                    # [B, C, 1, 1]
-                    F.grid_sample(sources[source_index],  # [B, C, H, W]
-                                  labels[:, label_index, :]  # [B, 1, 1, 2
-                                  ).squeeze(2).squeeze(2)
-                )
-            res.append(torch.cat(label_res, 1))
+                box_res.append(F.grid_sample(sources[source_index], bbox[:, box_index, :]).squeeze(2).squeeze(2))
+            res.append(torch.cat(box_res, 1))
 
         return torch.stack(res, 1)
 
@@ -212,10 +199,7 @@ class SST(nn.Module):
         stacker1_pre_output = self.stacker2_bn(stacker1_pre_output.contiguous())
         stacker1_next_output = self.stacker2_bn(stacker1_next_output.contiguous())
 
-        output = torch.cat(
-            [stacker1_pre_output, stacker1_next_output],
-            1
-        )
+        output = torch.cat([stacker1_pre_output, stacker1_next_output], 1)
 
         return output
 

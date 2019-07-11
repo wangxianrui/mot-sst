@@ -1,6 +1,6 @@
 class Config:
     '''common'''
-    data_root = 'dataset/MOT17/'
+    data_root = 'f:/dataset/MOT17/'
     log_dir = 'logs/'
     ckpt_dir = 'checkpoints/'
     use_cuda = False
@@ -13,7 +13,6 @@ class Config:
     selector_channel = (60, 80, 100, 80, 60, 50, 40, 30, 20)
     final_net = [1040, 512, 256, 128, 64, 1]  # final_net[0] = np.sum(selector_channel) * 2
     vgg_source = [15, 25, -1]
-    default_mbox = [4, 6, 6, 6, 4, 4]
     false_constant = 10
     '''train'''
     backbone = 'pretrained/vgg16_reducedfc.pth'
@@ -37,5 +36,5 @@ class Config:
     log_setp = 500
     save_step = 1000
     '''eval'''
-    resume = 'pretrained/sst900_final_.pth'
+    resume = 'pretrained/sst900_final.pth'
     result_dir = 'result/'
