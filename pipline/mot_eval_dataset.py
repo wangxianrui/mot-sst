@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import cv2
-import numpy as np
 import torch.utils.data
 
 
@@ -31,21 +30,10 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         return cv2.imread(self.image_format.format(index))
 
     def __getitem__(self, item):
-        return (self.get_image_by_index(item + 1), self.get_detection_by_index(item + 1))
+        image = self.get_image_by_index(item + 1)
+        detection = self.get_detection_by_index(item + 1)
+        return self.transform(image, detection)
 
-
-class DataTransform:
     @staticmethod
-    def transform(image, detection, size, mean):
-        '''
-        transform image and detection to the sst input format
-        :param image:
-        :param detection:
-        :param size:
-        :param mean:
-        :return:
-        '''
-        image.astype(np.float32)
-        detection[[4, 5]] += detection[2, 3]
-        image = cv2.resize(image, size)
-        image -= mean
+    def transform(image, detection):
+        return image, detection

@@ -8,8 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 from config import Config
 from network.sst import build_sst
 from network.sst_loss import SSTLoss
-from pipline.mot_train_dataset import MOTTrainDataset
-from pipline.augmentations import SSJTrainAugment, collate_fn
+from pipline.mot_train_dataset import MOTTrainDataset, collate_fn
 
 
 def adjust_lr(optimizer):
@@ -27,9 +26,8 @@ def train():
 
     # prepare dataset
     print('loading dataset...')
-    dataset = MOTTrainDataset(Config.data_root, SSJTrainAugment(Config.sst_dim, Config.mean_pixel))
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, \
-        num_workers=Config.num_workers, collate_fn=collate_fn)
+    dataset = MOTTrainDataset()
+    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, num_workers=Config.num_workers, collate_fn=collate_fn)
 
     # create model
     net = torch.nn.DataParallel(build_sst('train'))
@@ -42,8 +40,7 @@ def train():
 
     # criterion && optimizer
     criterion = SSTLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, \
-        weight_decay=Config.weight_decay)
+    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, weight_decay=Config.weight_decay)
 
     for epoch in range(Config.max_epoch):
         if epoch in Config.lr_epoch:
@@ -79,8 +76,7 @@ def train():
             epoch_loss += [loss.data.cpu()]
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}' \
-                    .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
+                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'.format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)

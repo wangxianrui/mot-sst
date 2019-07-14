@@ -56,8 +56,7 @@ class SSTLoss(torch.nn.Module):
             loss_next = 0
         if target_union_num > 0:
             loss_union = -(target_union * torch.log(predict_union)).sum() / target_union_num
-            loss_sim = (target_union *
-                        torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
+            loss_sim = (target_union * torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
         else:
             loss_union = 0
             loss_sim = 0

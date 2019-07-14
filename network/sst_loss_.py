@@ -1,3 +1,7 @@
+"""
+have been moved to sst_loss.py
+"""
+
 import torch
 import torch.nn.functional as F
 from config import Config
@@ -64,8 +68,7 @@ class SSTLoss(torch.nn.Module):
         indexes_pre = indexes_pre[:, :, :-1]
         mask_pre_num = mask_pre[:, :, :-1].sum().item()
         if mask_pre_num:
-            accuracy_pre = (
-                indexes_pre[mask_pre[:, :, :-1]] == indexes_[mask_pre[:, :, :-1]]).float().sum() / mask_pre_num
+            accuracy_pre = (indexes_pre[mask_pre[:, :, :-1]] == indexes_[mask_pre[:, :, :-1]]).float().sum() / mask_pre_num
         else:
             accuracy_pre = (indexes_pre[mask_pre[:, :, :-1]] == indexes_[mask_pre[:, :, :-1]]).float().sum() + 1
 
@@ -75,11 +78,8 @@ class SSTLoss(torch.nn.Module):
         indexes_next = indexes_next[:, :, :-1]
         mask_next_num = mask_next[:, :, :-1].sum().item()
         if mask_next_num:
-            accuracy_next = (
-                indexes_next[mask_next[:, :, :-1]] == indexes_[mask_next[:, :, :-1]]).float().sum() / mask_next_num
+            accuracy_next = (indexes_next[mask_next[:, :, :-1]] == indexes_[mask_next[:, :, :-1]]).float().sum() / mask_next_num
         else:
             accuracy_next = (indexes_next[mask_next[:, :, :-1]] == indexes_[mask_next[:, :, :-1]]).float().sum() + 1
 
-        return loss_pre, loss_next, loss_similarity, \
-               (loss_pre + loss_next + loss + loss_similarity) / 4.0, accuracy_pre, accuracy_next, (
-                       accuracy_pre + accuracy_next) / 2.0, indexes_pre
+        return loss_pre, loss_next, loss_similarity, (loss_pre + loss_next + loss + loss_similarity) / 4.0, accuracy_pre, accuracy_next, (accuracy_pre + accuracy_next) / 2.0, indexes_pre

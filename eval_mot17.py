@@ -54,22 +54,23 @@ def eval(args):
         dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file, min_confidence=0.0)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
-            item = next(dataset_iter)
-            if not item:
-                continue
-            img = item[0]
-            det = item[1]
+            # TODO
+            # return formated img, det, and ori_shape for output
+            img, det = next(dataset_iter)
             if img is None or det is None or len(det) == 0:
                 continue
 
+            # TODO
             # detection && track
             if len(det) > Config.max_object:
                 det = det[:Config.max_object, :]
+            # move format to dataset
             h, w, _ = img.shape
             det[:, [2, 4]] /= float(w)
             det[:, [3, 5]] /= float(h)
+
             timer.tic()
-            tracker.update(img, det[:, 2:6], False, i)
+            tracker.update(img, det[:, 2:6], i)
             timer.toc()
 
             # save result

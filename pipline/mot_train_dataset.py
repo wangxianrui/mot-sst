@@ -4,8 +4,10 @@ import cv2
 import numpy as np
 import pandas as pd
 import random
+import torch
 import torch.utils.data as data
 from config import Config
+from .augmentations import SSTTrainAugment
 
 
 class Node:
@@ -62,10 +64,7 @@ class GTSingleParser:
     parser one video sequence
     '''
 
-    def __init__(self, folder,
-                 min_visibility=Config.min_visibility,
-                 min_gap=Config.min_gap_frame,
-                 max_gap=Config.max_gap_frame):
+    def __init__(self, folder, min_visibility=Config.min_visibility, min_gap=Config.min_gap_frame, max_gap=Config.max_gap_frame):
         self.min_gap = min_gap
         self.max_gap = max_gap
         # 1. get the gt path and image folder
@@ -162,9 +161,7 @@ class GTSingleParser:
         # 5. get the labels
         current_track_indexes = np.array(current_track_indexes)
         next_track_indexes = np.array(next_track_indexes)
-        labels = np.repeat(np.expand_dims(np.array(current_track_indexes), axis=1), len(next_track_indexes),
-                           axis=1) == np.repeat(np.expand_dims(np.array(next_track_indexes), axis=0),
-                                                len(current_track_indexes), axis=0)
+        labels = np.repeat(np.expand_dims(np.array(current_track_indexes), axis=1), len(next_track_indexes), axis=1) == np.repeat(np.expand_dims(np.array(next_track_indexes), axis=0), len(current_track_indexes), axis=0)
 
         # 6. return all values
         # 6.1 change boxes format
@@ -182,14 +179,10 @@ class GTParser:
     parser all video sequence
     '''
 
-    def __init__(self, mot_root=Config.data_root, detector=Config.detector):
+    def __init__(self):
         # 1. get all the folders
-        mot_root = os.path.join(mot_root, 'train')
-        all_folders = sorted(
-            [os.path.join(mot_root, i) for i in os.listdir(mot_root)
-             if os.path.isdir(os.path.join(mot_root, i))
-             and i.find(detector) != -1]
-        )
+        data_root = os.path.join(Config.data_root, 'train')
+        all_folders = sorted([os.path.join(data_root, i) for i in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, i)) and i.find(Config.detector) != -1])
         # 2. parser video sequence
         self.parsers = [GTSingleParser(folder) for folder in all_folders]
 
@@ -228,69 +221,46 @@ class MOTTrainDataset(data.Dataset):
     it can be selected from the specified frame
     '''
 
-    def __init__(self,
-                 mot_root=Config.data_root,
-                 transform=None,
-                 detector=Config.detector,
-                 max_object=Config.max_object):
+    def __init__(self):
         # 1. init all the variables
-        self.mot_root = mot_root
-        self.transform = transform
-        self.detector = detector
-        self.max_object = max_object
+        # self.data_root = Config.data_root
+        self.transform = SSTTrainAugment(Config.sst_dim, Config.mean_pixel)
+        # self.detector = Config.detector
+        # self.max_object = Config.max_object
 
         # 2. init GTParser
-        self.parser = GTParser(self.mot_root, self.detector)
+        self.parser = GTParser()
 
     def __getitem__(self, item):
         current_image, current_box, next_image, next_box, labels = self.parser[item]
 
         while current_image is None:
-            current_image, current_box, next_image, next_box, labels = self.parser[
-                item + random.randint(-Config.max_gap_frame, Config.max_gap_frame)]
-
-        if self.transform is None:
-            return current_image, current_box, next_image, next_box, labels
+            current_image, current_box, next_image, next_box, labels = self.parser[item + random.randint(-Config.max_gap_frame, Config.max_gap_frame)]
 
         # change the label to max_object x max_object
-        labels = np.pad(labels, [(0, self.max_object - labels.shape[0]), (0, self.max_object - labels.shape[1])],
-                        mode='constant', constant_values=0)
+        labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]), (0, Config.max_object - labels.shape[1])], mode='constant', constant_values=0)
         return self.transform(current_image, next_image, current_box, next_box, labels)
 
     def __len__(self):
         return len(self.parser)
 
 
-def test_dataset():
-    # 1. test init function
-    dataset = MOTTrainDataset()
-    print(len(dataset))
-
-    # 2. test get item
-    l = len(dataset)
-    for i in range(l):
-        print(i)
-        current_image, current_boxes, next_image, next_boxes, labels = dataset[i]
-        if current_image is None:
-            continue
-        for i, b1 in enumerate(current_boxes):
-            color = (0, 0, 255)
-            if sum(labels[i, :]) == 0:
-                b2 = np.array([0, 0, 0, 0])
-            else:
-                b2 = next_boxes[labels[i, :]][0]
-                color = tuple((np.random.rand(3) * 255).astype(int).tolist())
-            if sum(labels[i, :]) > 1:
-                raise EnvironmentError('label error')
-            b1 = b1.astype(int)
-            b2 = b2.astype(int)
-            cv2.rectangle(current_image, tuple(b1[:2]), tuple(b1[2:]), color, 2)
-            cv2.rectangle(next_image, tuple(b2[:2]), tuple(b2[2:]), color, 2)
-        image = np.concatenate([current_image, next_image], axis=0)
-        image = cv2.resize(image, (1900, 1000))
-        cv2.imshow('res', image)
-        cv2.waitKey(25)
-
-
-if __name__ == '__main__':
-    test_dataset()
+def collate_fn(batch):
+    img_pre = []
+    img_next = []
+    boxes_pre = []
+    boxes_next = []
+    labels = []
+    indexes_pre = []
+    indexes_next = []
+    for sample in batch:
+        img_pre.append(sample[0])
+        img_next.append(sample[1])
+        boxes_pre.append(sample[2][0].float())
+        boxes_next.append(sample[3][0].float())
+        labels.append(sample[4].float())
+        indexes_pre.append(sample[2][1].byte())
+        indexes_next.append(sample[3][1].byte())
+    return torch.stack(img_pre, 0), torch.stack(img_next, 0), torch.stack(boxes_pre, 0), \
+           torch.stack(boxes_next, 0), torch.stack(labels, 0), torch.stack(indexes_pre, 0).unsqueeze(1), \
+           torch.stack(indexes_next, 0).unsqueeze(1)

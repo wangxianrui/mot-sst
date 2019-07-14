@@ -61,9 +61,7 @@ def show_matching_rectangle(img_pre, img_next, boxes_pre, boxes_next, labels):
         box_n = boxes_next[c, 0:4]
         center_p = (box_p[:2] + box_p[2:4]) / 2.0
         center_n = (box_n[:2] + box_n[2:4]) / 2.0 + np.array([0, h])
-        cv2.line(img, tuple(center_p.astype(int)), tuple(center_n.astype(int)),
-                 ((int)(np.random.randn() * 255), (int)(np.random.randn() * 255), (int)(np.random.randn() * 255)),
-                 2)
+        cv2.line(img, tuple(center_p.astype(int)), tuple(center_n.astype(int)), ((int)(np.random.randn() * 255), (int)(np.random.randn() * 255), (int)(np.random.randn() * 255)), 2)
 
     return img
 
@@ -109,18 +107,17 @@ def getProperbility(input, target, mask0, mask1):
     target_num_next = target_next.sum()
     target_num_union = target_union.sum()
     if int(target_num_pre.data[0]):
-        loss_pre = - (target_pre * torch.log(input_pre)).sum() / target_num_pre
+        loss_pre = -(target_pre * torch.log(input_pre)).sum() / target_num_pre
     else:
-        loss_pre = - (target_pre * torch.log(input_pre)).sum()
+        loss_pre = -(target_pre * torch.log(input_pre)).sum()
     if int(target_num_next.data[0]):
-        loss_next = - (target_next * torch.log(input_next)).sum() / target_num_next
+        loss_next = -(target_next * torch.log(input_next)).sum() / target_num_next
     else:
-        loss_next = - (target_next * torch.log(input_next)).sum()
+        loss_next = -(target_next * torch.log(input_next)).sum()
     if int(target_num_union.data[0]):
-        loss_similarity = (0.5 * target_union * (
-            torch.abs((1 - input_pre) ** 2 - (1 - input_next) ** 2))).sum() / target_num
+        loss_similarity = (0.5 * target_union * (torch.abs((1 - input_pre)**2 - (1 - input_next)**2))).sum() / target_num
     else:
-        loss_similarity = (0.5 * target_union * (torch.abs((1 - input_pre) ** 2 - (1 - input_next) ** 2))).sum()
+        loss_similarity = (0.5 * target_union * (torch.abs((1 - input_pre)**2 - (1 - input_next)**2))).sum()
 
     loss = (loss_pre + loss_next) / 2.0 + loss_similarity
 
@@ -225,9 +222,7 @@ def show_matching_rectangle(img_pre, img_next, boxes_pre, boxes_next, labels, sh
             box_n = boxes_next[c, 0:4]
             center_p = (box_p[:2] + box_p[2:4]) / 2.0
             center_n = (box_n[:2] + box_n[2:4]) / 2.0 + np.array([0, h])
-            cv2.line(img, tuple(center_p.astype(int)), tuple(center_n.astype(int)),
-                     ((int)(np.random.randn() * 255), (int)(np.random.randn() * 255), (int)(np.random.randn() * 255)),
-                     2)
+            cv2.line(img, tuple(center_p.astype(int)), tuple(center_n.astype(int)), ((int)(np.random.randn() * 255), (int)(np.random.randn() * 255), (int)(np.random.randn() * 255)), 2)
 
     return img
 
@@ -256,12 +251,10 @@ def show_batch_circle_image(img_pre, img_next, boxes_pre, boxes_next, valid_pre,
 
         # draw all circle
         for b in boxes1:
-            img1 = cv2.circle(img1, tuple(((b + 1) / 2.0 * Config.sst_dim).astype(int)), 20, [0, 0, 255],
-                              thickness=3)
+            img1 = cv2.circle(img1, tuple(((b + 1) / 2.0 * Config.sst_dim).astype(int)), 20, [0, 0, 255], thickness=3)
 
         for b in boxes2:
-            img2 = cv2.circle(img2, tuple(((b + 1) / 2.0 * Config.sst_dim).astype(int)), 20, [0, 0, 255],
-                              thickness=3)
+            img2 = cv2.circle(img2, tuple(((b + 1) / 2.0 * Config.sst_dim).astype(int)), 20, [0, 0, 255], thickness=3)
 
         gap_pixel = int(gap * Config.sst_dim)
         H, W, C = img1.shape

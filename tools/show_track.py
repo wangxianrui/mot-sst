@@ -79,9 +79,9 @@ def get_spaced_colors(n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Images from Results')
-    parser.add_argument('--data_root', default='dataset/MOT17/')
-    parser.add_argument('--result_dir', default='result/')
-    parser.add_argument('--type', default='train/')
+    parser.add_argument('--data_root', default='dataset/MOT17')
+    parser.add_argument('--result_dir', default='result')
+    parser.add_argument('--type', default='train')
     args = parser.parse_args()
 
     main(args)

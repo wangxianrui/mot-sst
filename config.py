@@ -1,6 +1,14 @@
+"""
+# TODO
+Config
+TrainConfig(Config)
+EvalConfig(Config)
+"""
+
+
 class Config:
     '''common'''
-    data_root = 'dataset/MOT17/'
+    data_root = '../dataset/MOT17/'
     log_dir = 'logs/'
     ckpt_dir = 'checkpoints/'
     use_cuda = False
@@ -38,3 +46,58 @@ class Config:
     '''eval'''
     resume = 'pretrained/sst900_final.pth'
     result_dir = 'result/'
+
+
+class TrackerConfig:
+    max_record_frame = 30
+    max_track_age = 30
+    max_track_node = 30
+    max_draw_track_node = 30
+    max_object = Config.max_object
+    sst_model_path = Config.resume
+    mean_pixel = Config.mean_pixel
+    image_size = (Config.sst_dim, Config.sst_dim)
+    cuda = Config.use_cuda
+
+    min_iou_frame_gap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    min_iou = [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0]
+
+    min_merge_threshold = 0.9
+
+    max_bad_node = 0.9
+
+    decay = 0.995
+
+    roi_verify_max_iteration = 2
+    roi_verify_punish_rate = 0.6
+
+    @staticmethod
+    def set_configure(all_choice):
+        min_iou_frame_gaps = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
+        min_ious = [
+            [0.3, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0],
+            [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+            [0.2, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+            [0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+            [-1.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0],
+            [0.4, 0.3, 0.25, 0.2, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -4.5, -5.0, -5.5, -6.0, -6.5, -7.0],
+        ]
+
+        decays = [1 - 0.01 * i for i in range(11)]
+
+        roi_verify_max_iterations = [2, 3, 4, 5, 6]
+
+        roi_verify_punish_rates = [0.6, 0.4, 0.2, 0.1, 0.0, 1.0]
+
+        max_track_ages = [i * 3 for i in range(1, 11)]
+        max_track_nodes = [i * 3 for i in range(1, 11)]
+
+        if all_choice is None:
+            return
+        TrackerConfig.min_iou_frame_gap = min_iou_frame_gaps[all_choice[0]]
+        TrackerConfig.min_iou = min_ious[all_choice[0]]
+        TrackerConfig.decay = decays[all_choice[1]]
+        TrackerConfig.roi_verify_max_iteration = roi_verify_max_iterations[all_choice[2]]
+        TrackerConfig.roi_verify_punish_rate = roi_verify_punish_rates[all_choice[3]]
+        TrackerConfig.max_track_age = max_track_ages[all_choice[4]]
+        TrackerConfig.max_track_node = max_track_nodes[all_choice[5]]

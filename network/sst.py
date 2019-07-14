@@ -11,15 +11,6 @@ import torch.nn.functional as F
 from config import Config
 import os
 
-# todo: add more extra columns to use the mogranic method
-# todo: label the mot17 data and train the detector.
-# todo: Does the inherient really work
-# todo: add achors to extract features
-# todo: think about how to represent the motion model
-# todo: debug every feature step and see the feature change of each objects [do]
-# todo: change the output of the SST.
-# todo: add relu to extra net
-
 
 class SST(nn.Module):
     # new: combine two vgg_net
@@ -75,6 +66,75 @@ class SST(nn.Module):
         x = self.forward_final(x, self.final_net)
 
         x = self.add_unmatched_dim(x)
+        return x
+
+    def forward_vgg(self, x, vgg, sources):
+        for k in range(16):
+            x = vgg[k](x)
+        sources.append(x)
+
+        for k in range(16, 23):
+            x = vgg[k](x)
+        sources.append(x)
+
+        for k in range(23, 35):
+            x = vgg[k](x)
+        sources.append(x)
+        return x
+
+    def forward_extras(self, x, extras, sources):
+        for k, v in enumerate(extras):
+            x = v(x)
+            if k % 6 == 3:
+                sources.append(x)
+        return x
+
+    def forward_selector_stacker1(self, sources, bbox, selector):
+        '''
+        :param sources: [B, C, H, W]
+        :param bbox: [B, N, 1, 1, 2]
+        :return: the connected feature
+        '''
+        sources = [F.relu(net(x), inplace=True) for net, x in zip(selector, sources)]
+
+        res = list()
+        for box_index in range(bbox.size(1)):
+            box_res = list()
+            for source_index in range(len(sources)):
+                box_res.append(F.grid_sample(sources[source_index], bbox[:, box_index, :]).squeeze(2).squeeze(2))
+            res.append(torch.cat(box_res, 1))
+
+        return torch.stack(res, 1)
+
+    def forward_stacker2(self, stacker1_pre_output, stacker1_next_output):
+        stacker1_pre_output = stacker1_pre_output.unsqueeze(2).repeat(1, 1, self.max_object, 1).permute(0, 3, 1, 2)
+        stacker1_next_output = stacker1_next_output.unsqueeze(1).repeat(1, self.max_object, 1, 1).permute(0, 3, 1, 2)
+
+        stacker1_pre_output = self.stacker2_bn(stacker1_pre_output.contiguous())
+        stacker1_next_output = self.stacker2_bn(stacker1_next_output.contiguous())
+
+        output = torch.cat([stacker1_pre_output, stacker1_next_output], 1)
+
+        return output
+
+    def forward_final(self, x, final_net):
+        x = x.contiguous()
+        for f in final_net:
+            x = f(x)
+        return x
+
+    def add_unmatched_dim(self, x):
+        if self.false_objects_column is None:
+            self.false_objects_column = torch.ones(x.shape[0], x.shape[1], x.shape[2], 1) * self.false_constant
+            if self.use_gpu:
+                self.false_objects_column = self.false_objects_column.cuda()
+        x = torch.cat([x, self.false_objects_column], 3)
+
+        if self.false_objects_row is None:
+            self.false_objects_row = torch.ones(x.shape[0], x.shape[1], 1, x.shape[3]) * self.false_constant
+            if self.use_gpu:
+                self.false_objects_row = self.false_objects_row.cuda()
+        x = torch.cat([x, self.false_objects_row], 2)
         return x
 
     def forward_feature_extracter(self, x, l):
@@ -151,84 +211,6 @@ class SST(nn.Module):
         else:
             y = x.data.numpy()
         return y
-
-    def forward_vgg(self, x, vgg, sources):
-        for k in range(16):
-            x = vgg[k](x)
-        sources.append(x)
-
-        for k in range(16, 23):
-            x = vgg[k](x)
-        sources.append(x)
-
-        for k in range(23, 35):
-            x = vgg[k](x)
-        sources.append(x)
-        return x
-
-    def forward_extras(self, x, extras, sources):
-        for k, v in enumerate(extras):
-            x = v(x)
-            if k % 6 == 3:
-                sources.append(x)
-        return x
-
-    def forward_selector_stacker1(self, sources, bbox, selector):
-        '''
-        :param sources: [B, C, H, W]
-        :param bbox: [B, N, 1, 1, 2]
-        :return: the connected feature
-        '''
-        sources = [F.relu(net(x), inplace=True) for net, x in zip(selector, sources)]
-
-        res = list()
-        for box_index in range(bbox.size(1)):
-            box_res = list()
-            for source_index in range(len(sources)):
-                box_res.append(F.grid_sample(sources[source_index], bbox[:, box_index, :]).squeeze(2).squeeze(2))
-            res.append(torch.cat(box_res, 1))
-
-        return torch.stack(res, 1)
-
-    def forward_stacker2(self, stacker1_pre_output, stacker1_next_output):
-        stacker1_pre_output = stacker1_pre_output.unsqueeze(2).repeat(1, 1, self.max_object, 1).permute(0, 3, 1, 2)
-        stacker1_next_output = stacker1_next_output.unsqueeze(1).repeat(1, self.max_object, 1, 1).permute(0, 3, 1, 2)
-
-        stacker1_pre_output = self.stacker2_bn(stacker1_pre_output.contiguous())
-        stacker1_next_output = self.stacker2_bn(stacker1_next_output.contiguous())
-
-        output = torch.cat([stacker1_pre_output, stacker1_next_output], 1)
-
-        return output
-
-    def forward_final(self, x, final_net):
-        x = x.contiguous()
-        for f in final_net:
-            x = f(x)
-        return x
-
-    def add_unmatched_dim(self, x):
-        if self.false_objects_column is None:
-            self.false_objects_column = torch.ones(x.shape[0], x.shape[1], x.shape[2], 1) * self.false_constant
-            if self.use_gpu:
-                self.false_objects_column = self.false_objects_column.cuda()
-        x = torch.cat([x, self.false_objects_column], 3)
-
-        if self.false_objects_row is None:
-            self.false_objects_row = torch.ones(x.shape[0], x.shape[1], 1, x.shape[3]) * self.false_constant
-            if self.use_gpu:
-                self.false_objects_row = self.false_objects_row.cuda()
-        x = torch.cat([x, self.false_objects_row], 2)
-        return x
-
-    def load_weights(self, base_file):
-        other, ext = os.path.splitext(base_file)
-        if ext == '.pkl' or '.pth':
-            print('Loading weights into state dict...')
-            self.load_state_dict(torch.load(base_file, map_location=lambda storage, loc: storage))
-            print('Finished')
-        else:
-            print('Sorry only .pth and .pkl files supported.')
 
 
 def vgg(cfg, i, batch_norm=False):
@@ -329,5 +311,4 @@ def build_sst(phase, size=900):
         print('Error: Sorry only SST 900 is supported currently!')
         return
 
-    return SST(phase, *selector(vgg(Config.base_net, 3), add_extras(Config.extra_net, 1024)),
-               add_final(Config.final_net), Config.use_cuda)
+    return SST(phase, *selector(vgg(Config.base_net, 3), add_extras(Config.extra_net, 1024)), add_final(Config.final_net), Config.use_cuda)

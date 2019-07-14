@@ -53,21 +53,21 @@ class Compose(object):
         return img_pre, img_next, boxes_pre, boxes_next, labels
 
 
-class Lambda(object):
-    """Applies a lambda as a transform."""
-
-    def __init__(self, lambd):
-        assert isinstance(lambd, types.LambdaType)
-        self.lambd = lambd
-
-    def __call__(self, img, boxes=None, labels=None):
-        return self.lambd(img, boxes, labels)
+# class Lambda(object):
+#     """Applies a lambda as a transform."""
+#
+#     def __init__(self, lambd):
+#         assert isinstance(lambd, types.LambdaType)
+#         self.lambd = lambd
+#
+#     def __call__(self, img, boxes=None, labels=None):
+#         return self.lambd(img, boxes, labels)
 
 
 class ConvertFromInts(object):
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         return img_pre.astype(np.float32), img_next.astype(np.float32), \
-            boxes_pre, boxes_next, labels
+               boxes_pre, boxes_next, labels
 
 
 class SubtractMeans(object):
@@ -269,11 +269,11 @@ class RandomSampleCrop(object):
         if isPre:
             current_labels = current_labels[np.logical_not(mask), :]
             current_labels = np.pad(current_labels, [[0, h - current_labels.shape[0]], [0, 0]], \
-                mode='constant', constant_values=0.0)
+                                    mode='constant', constant_values=0.0)
         else:
             current_labels = current_labels[:, np.logical_not(mask)]
             current_labels = np.pad(current_labels, [[0, 0], [0, w - current_labels.shape[1]]], \
-                mode='constant', constant_values=0.0)
+                                    mode='constant', constant_values=0.0)
 
         # should we use the box left and top corner or the crop's
         current_boxes[:, :2] = np.maximum(current_boxes[:, :2], rect[:2])
@@ -318,7 +318,7 @@ class RandomSampleCrop(object):
                     continue
 
                 res_next = self.crop(img_next, boxes_next, res_pre[2], mode, \
-                    min_iou, max_iou, w, h, left, top, isPre=False)
+                                     min_iou, max_iou, w, h, left, top, isPre=False)
                 if res_next is None:
                     continue
                 else:
@@ -404,7 +404,7 @@ class SwapChannels(object):
 class PhotometricDistort(object):
     def __init__(self):
         self.pd = [RandomContrast(), ConvertColor(transform='HSV'), RandomSaturation(), \
-            RandomHue(), ConvertColor(current='HSV', transform='BGR'), RandomContrast()]
+                   RandomHue(), ConvertColor(current='HSV', transform='BGR'), RandomContrast()]
         self.rand_brightness = RandomBrightness()
         self.rand_light_noise = RandomLightingNoise()
 
@@ -518,47 +518,11 @@ class ToTensor(object):
         return img_pre, img_next, boxes_pre, boxes_next, labels
 
 
-class SSJTrainAugment(object):
+class SSTTrainAugment(object):
     def __init__(self, size, mean):
         self.mean = mean
         self.size = size
-
-        self.augment = Compose([ConvertFromInts(), PhotometricDistort(), Expand(self.mean), \
-            RandomSampleCrop(), RandomMirror(), ToPercentCoords(), \
-            Resize(self.size), SubtractMeans(self.mean), ResizeShuffleBoxes(), FormatBoxes(), ToTensor()])
+        self.augment = Compose([ConvertFromInts(), PhotometricDistort(), Expand(self.mean), RandomSampleCrop(), RandomMirror(), ToPercentCoords(), Resize(self.size), SubtractMeans(self.mean), ResizeShuffleBoxes(), FormatBoxes(), ToTensor()])
 
     def __call__(self, img_pre, img_next, boxes_pre, boxes_next, labels):
         return self.augment(img_pre, img_next, boxes_pre, boxes_next, labels)
-
-
-class SSJEvalAugment(object):
-    def __init__(self, size, mean):
-        self.mean = mean
-        self.size = size
-        self.augment = Compose([ConvertFromInts(), ToPercentCoords(), Resize(self.size), SubtractMeans(self.mean), ResizeShuffleBoxes(), FormatBoxes(), ToTensor()])
-
-    def __call__(self, img_pre, img_next, boxes_pre, boxes_next, labels):
-        return self.augment(img_pre, img_next, boxes_pre, boxes_next, labels)
-
-
-def collate_fn(batch):
-    img_pre = []
-    img_next = []
-    boxes_pre = []
-    boxes_next = []
-    labels = []
-    indexes_pre = []
-    indexes_next = []
-    for sample in batch:
-        img_pre.append(sample[0])
-        img_next.append(sample[1])
-        boxes_pre.append(sample[2][0].float())
-        boxes_next.append(sample[3][0].float())
-        labels.append(sample[4].float())
-        indexes_pre.append(sample[2][1].byte())
-        indexes_next.append(sample[3][1].byte())
-    return torch.stack(img_pre, 0), torch.stack(img_next, 0), \
-           torch.stack(boxes_pre, 0), torch.stack(boxes_next, 0), \
-           torch.stack(labels, 0), \
-           torch.stack(indexes_pre, 0).unsqueeze(1), \
-           torch.stack(indexes_next, 0).unsqueeze(1)

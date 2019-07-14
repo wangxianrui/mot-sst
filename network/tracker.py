@@ -174,14 +174,7 @@ class TrackerConfig:
 
     @staticmethod
     def set_configure(all_choice):
-        min_iou_frame_gaps = [
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-        ]
+        min_iou_frame_gaps = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
         min_ious = [
             [0.3, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0],
             [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
@@ -212,14 +205,12 @@ class TrackerConfig:
 
     @staticmethod
     def get_configure_str(all_choice):
-        return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2], all_choice[3], all_choice[4],
-                                          all_choice[5])
+        return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2], all_choice[3], all_choice[4], all_choice[5])
 
     @staticmethod
     def get_all_choices():
         # return [(1, 1, 0, 0, 4, 2)]
-        return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5) for i3 in range(5) for i4 in range(5)
-                for i5 in range(5) for i6 in range(5)]
+        return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5) for i3 in range(5) for i4 in range(5) for i5 in range(5) for i6 in range(5)]
 
     @staticmethod
     def get_all_choices_decay():
@@ -271,9 +262,7 @@ class FeatureRecorder:
             self.all_similarity[frame_index] = {}
             for pre_index in self.all_frame_index[:-1]:
                 delta = pow(TrackerConfig.decay, (frame_index - pre_index) / 3.0)
-                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index],
-                                                              features,
-                                                              fill_up_column=False)
+                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], features, fill_up_column=False)
                 self.all_similarity[frame_index][pre_index] = pre_similarity * delta
 
             self.all_iou[frame_index] = {}
@@ -312,6 +301,15 @@ class FeatureRecorder:
 
         return None
 
+    def get_features(self, frame_index):
+        if frame_index in self.all_frame_index:
+            features = self.all_features[frame_index]
+        else:
+            return None
+        if len(features) == 0:
+            return None
+        return features
+
     def get_box(self, frame_index, detection_index):
         if frame_index in self.all_frame_index:
             boxes = self.all_boxes[frame_index]
@@ -321,15 +319,6 @@ class FeatureRecorder:
             if detection_index < len(boxes):
                 return boxes[detection_index]
         return None
-
-    def get_features(self, frame_index):
-        if frame_index in self.all_frame_index:
-            features = self.all_features[frame_index]
-        else:
-            return None
-        if len(features) == 0:
-            return None
-        return features
 
     def get_boxes(self, frame_index):
         if frame_index in self.all_frame_index:
@@ -382,8 +371,7 @@ class Track:
         self.id = Track._id_pool
         Track._id_pool += 1
         self.age = 0
-        self.valid = True  # indicate this track is merged
-        self.color = tuple((np.random.rand(3) * 255).astype(int).tolist())
+        self.valid = True
 
     def __del__(self):
         for n in self.nodes:
@@ -402,6 +390,7 @@ class Track:
             iou = n.get_iou(frame_index, recorder, node.id)
             delta_frame = frame_index - n.frame_index
             if delta_frame in TrackerConfig.min_iou_frame_gap:
+                # TODO add index to min iou
                 iou_index = TrackerConfig.min_iou_frame_gap.index(delta_frame)
                 # if iou < TrackerConfig.min_iou[iou_index]:
                 if iou < TrackerConfig.min_iou[-1]:
@@ -532,40 +521,6 @@ class Tracks:
         # remove the invalid tracks
         self.tracks = [t for t in self.tracks if t.valid]
 
-    def show(self, frame_index, recorder, image):
-        h, w, _ = image.shape
-
-        # draw rectangle
-        for t in self.tracks:
-            if len(t.nodes) > 0 and t.age < 2:
-                b = t.nodes[-1].get_box(frame_index, recorder)
-                if b is None:
-                    continue
-                txt = '({}, {})'.format(t.id, t.nodes[-1].id)
-                image = cv2.putText(image, txt, (int(b[0] * w), int((b[1]) * h)), cv2.FONT_HERSHEY_SIMPLEX, 1, t.color,
-                                    3)
-                image = cv2.rectangle(image, (int(b[0] * w), int((b[1]) * h)), (int(
-                    (b[0] + b[2]) * w), int((b[1] + b[3]) * h)), t.color, 2)
-
-        # draw line
-        for t in self.tracks:
-            if t.age > 1:
-                continue
-            if len(t.nodes) > self.max_drawing_track:
-                start = len(t.nodes) - self.max_drawing_track
-            else:
-                start = 0
-            for n1, n2 in zip(t.nodes[start:], t.nodes[start + 1:]):
-                b1 = n1.get_box(frame_index, recorder)
-                b2 = n2.get_box(frame_index, recorder)
-                if b1 is None or b2 is None:
-                    continue
-                c1 = (int((b1[0] + b1[2] / 2.0) * w), int((b1[1] + b1[3]) * h))
-                c2 = (int((b2[0] + b2[2] / 2.0) * w), int((b2[1] + b2[3]) * h))
-                image = cv2.line(image, c1, c2, t.color, 2)
-
-        return image
-
 
 # The tracker is compatible with pytorch (cuda)
 class SSTTracker:
@@ -592,7 +547,7 @@ class SSTTracker:
             self.sst.load_state_dict(torch.load(Config.resume, map_location='cpu'))
         self.sst.eval()
 
-    def update(self, image, detection, show_image, frame_index, force_init=False):
+    def update(self, image, detection, frame_index):
         '''
         Update the state of tracker, the following jobs should be done:
         1) extract the features
@@ -606,9 +561,9 @@ class SSTTracker:
 
         self.frame_index = frame_index
 
+        #  TODO move to dataset
         # format the image and detection
         h, w, _ = image.shape
-        image_org = np.copy(image)
         image = TrackUtil.convert_image(image)
         detection_org = np.copy(detection)
         detection = TrackUtil.convert_detection(detection)
@@ -619,15 +574,14 @@ class SSTTracker:
         # update recorder
         self.recorder.update(self.sst, self.frame_index, features.data, detection_org)
 
-        if self.frame_index == 0 or force_init or len(self.tracks.tracks) == 0:
+        if self.frame_index == 0 or len(self.tracks.tracks) == 0:
             for i in range(detection.shape[1]):
                 t = Track()
                 n = Node(self.frame_index, i)
                 t.add_node(self.frame_index, self.recorder, n)
                 self.tracks.append(t)
             self.tracks.one_frame_pass()
-            # self.frame_index += 1
-            return self.tracks.show(self.frame_index, self.recorder, image_org)
+            return
 
         # get tracks similarity
         y, ids = self.tracks.get_similarity(self.frame_index, self.recorder)
@@ -680,18 +634,3 @@ class SSTTracker:
 
         # remove the old track
         self.tracks.one_frame_pass()
-
-        # merge the tracks
-        # if self.frame_index % 20 == 0:
-        #     self.tracks.merge(self.frame_index, self.recorder)
-
-        # if show_image:
-        image_org = self.tracks.show(self.frame_index, self.recorder, image_org)
-        # self.frame_index += 1
-        return image_org
-
-        # self.frame_index += 1
-        # image_org = cv2.resize(image_org, (320, 240))
-        # vw.write(image_org)
-
-        # plt.imshow(image_org)

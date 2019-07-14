@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "D:\\miniconda3\\envs\\pytorch\\python.exe",
-    "python.formatting.provider": "yapf",
-    "python.linting.pylintPath": "D:\\miniconda3\\envs\\pytorch\\Scripts"
-}
