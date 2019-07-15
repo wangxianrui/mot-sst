@@ -61,10 +61,10 @@ def eval(args):
                 continue
 
             # TODO
+            # move format to dataset
             # detection && track
             if len(det) > Config.max_object:
                 det = det[:Config.max_object, :]
-            # move format to dataset
             h, w, _ = img.shape
             det[:, [2, 4]] /= float(w)
             det[:, [3, 5]] /= float(h)
@@ -87,6 +87,6 @@ def eval(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type', default='test/', help='eval train or test dataset')
+    parser.add_argument('--type', default='test', help='eval train or test dataset')
     args = parser.parse_args()
     eval(args)

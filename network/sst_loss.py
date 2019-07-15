@@ -9,20 +9,18 @@ class SSTLoss(torch.nn.Module):
         self.max_object = Config.max_object
 
     def forward(self, predict, target, mask0, mask1):
-        '''
-        @description: 
-        @param {
-            param predict: b, 1, N+1, N+1
-            param target: b, 1, N+1, N+1
-            param mask0: pre mask b, 1, N+1
-            param mask1: next mask b, 1, N+1
-        } 
-        @return: 
-         mask, predict, target:  N+1, N+1
+        """
+
+        :param predict: b, 1, N+1, N+1
+        :param target: b, 1, N+1, N+1
+        :param mask0: pre mask b, 1, N+1
+        :param mask1: next mask b, 1, N+1
+        :return:
+        mask, predict, target:  N+1, N+1
         *_pre:  N, N+1
         *_next: N+1, N
         *_union: N, N
-        '''
+        """
         mask = (mask0.unsqueeze(3) * mask1.unsqueeze(2))
         mask_pre = mask[:, :, :-1, :].clone()
         mask_next = mask[:, :, :, :-1].clone()

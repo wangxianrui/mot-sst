@@ -77,7 +77,7 @@ class TrackUtil:
         elif n1.frame_index < n2.frame_index:
             n_max = n2
             n_min = n1
-        else:  # in the same frame_index
+        else:
             return None
 
         f_max = n_max.frame_index
@@ -155,7 +155,7 @@ class TrackerConfig:
     max_track_node = 30
     max_draw_track_node = 30
     max_object = Config.max_object
-    sst_model_path = Config.resume
+    sst_model_path = Config.model_path
     mean_pixel = Config.mean_pixel
     image_size = (Config.sst_dim, Config.sst_dim)
     cuda = Config.use_cuda
@@ -522,7 +522,6 @@ class Tracks:
         self.tracks = [t for t in self.tracks if t.valid]
 
 
-# The tracker is compatible with pytorch (cuda)
 class SSTTracker:
     def __init__(self):
         Track._id_pool = 0
@@ -541,10 +540,10 @@ class SSTTracker:
         # load the model
         self.sst = build_sst('test')
         if self.cuda:
-            self.sst.load_state_dict(torch.load(Config.resume))
+            self.sst.load_state_dict(torch.load(Config.model_path))
             self.sst = self.sst.cuda()
         else:
-            self.sst.load_state_dict(torch.load(Config.resume, map_location='cpu'))
+            self.sst.load_state_dict(torch.load(Config.model_path, map_location='cpu'))
         self.sst.eval()
 
     def update(self, image, detection, frame_index):

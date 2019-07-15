@@ -8,7 +8,7 @@ class MOTEvalDataset(torch.utils.data.Dataset):
     def __init__(self, image_folder, detection_file_name, min_confidence=None):
         self.image_folder = image_folder
         self.detection_file_name = detection_file_name
-        self.image_format = os.path.join(self.image_folder, '{0:06d}.jpg')
+        self.image_format = os.path.join(self.image_folder, '{:06d}.jpg')
         self.detection = pd.read_csv(self.detection_file_name, header=None)
         if min_confidence is not None:
             self.detection = self.detection[self.detection[6] > min_confidence]
@@ -26,7 +26,6 @@ class MOTEvalDataset(torch.utils.data.Dataset):
     def get_image_by_index(self, index):
         if index > len(self.detection_group_keys):
             return None
-
         return cv2.imread(self.image_format.format(index))
 
     def __getitem__(self, item):

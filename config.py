@@ -24,6 +24,7 @@ class Config:
     false_constant = 10
     '''train'''
     backbone = 'pretrained/vgg16_reducedfc.pth'
+    from_training = ''
     batch_size = 1
     num_workers = 8
     detector = 'FRCNN'  # DPM, SDP, FRCNN
@@ -41,10 +42,10 @@ class Config:
     max_epoch = 120
     momentum = 0.9
     weight_decay = 5e-4
-    log_setp = 500
-    save_step = 1000
+    log_setp = 1
+    save_step = 1
     '''eval'''
-    resume = 'pretrained/sst900_final.pth'
+    model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result/'
 
 
@@ -54,7 +55,7 @@ class TrackerConfig:
     max_track_node = 30
     max_draw_track_node = 30
     max_object = Config.max_object
-    sst_model_path = Config.resume
+    sst_model_path = Config.model_path
     mean_pixel = Config.mean_pixel
     image_size = (Config.sst_dim, Config.sst_dim)
     cuda = Config.use_cuda
@@ -73,7 +74,13 @@ class TrackerConfig:
 
     @staticmethod
     def set_configure(all_choice):
-        min_iou_frame_gaps = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
+        min_iou_frame_gaps = [
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
         min_ious = [
             [0.3, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0],
             [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],

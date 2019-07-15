@@ -79,7 +79,7 @@ def get_spaced_colors(n):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Images from Results')
     parser.add_argument('--data_root', default='dataset/MOT17/train/')
-    parser.add_argument('--save_dir', default='temp/')
+    parser.add_argument('--save_dir', default='ground_truth')
     args = parser.parse_args()
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)

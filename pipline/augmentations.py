@@ -53,15 +53,15 @@ class Compose(object):
         return img_pre, img_next, boxes_pre, boxes_next, labels
 
 
-# class Lambda(object):
-#     """Applies a lambda as a transform."""
-#
-#     def __init__(self, lambd):
-#         assert isinstance(lambd, types.LambdaType)
-#         self.lambd = lambd
-#
-#     def __call__(self, img, boxes=None, labels=None):
-#         return self.lambd(img, boxes, labels)
+class Lambda(object):
+    """Applies a lambda as a transform."""
+
+    def __init__(self, lambd):
+        assert isinstance(lambd, types.LambdaType)
+        self.lambd = lambd
+
+    def __call__(self, img, boxes=None, labels=None):
+        return self.lambd(img, boxes, labels)
 
 
 class ConvertFromInts(object):
