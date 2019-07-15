@@ -161,7 +161,8 @@ class GTSingleParser:
         # 5. get the labels
         current_track_indexes = np.array(current_track_indexes)
         next_track_indexes = np.array(next_track_indexes)
-        labels = np.repeat(np.expand_dims(np.array(current_track_indexes), axis=1), len(next_track_indexes), axis=1) == np.repeat(np.expand_dims(np.array(next_track_indexes), axis=0), len(current_track_indexes), axis=0)
+        labels = np.repeat(np.expand_dims(np.array(current_track_indexes), axis=1), len(next_track_indexes), axis=1) \
+                 == np.repeat(np.expand_dims(np.array(next_track_indexes), axis=0), len(current_track_indexes), axis=0)
 
         # 6. return all values
         # 6.1 change boxes format
@@ -235,10 +236,12 @@ class MOTTrainDataset(data.Dataset):
         current_image, current_box, next_image, next_box, labels = self.parser[item]
 
         while current_image is None:
-            current_image, current_box, next_image, next_box, labels = self.parser[item + random.randint(-Config.max_gap_frame, Config.max_gap_frame)]
+            current_image, current_box, next_image, next_box, labels = \
+                self.parser[item + random.randint(-Config.max_gap_frame, Config.max_gap_frame)]
 
         # change the label to max_object x max_object
-        labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]), (0, Config.max_object - labels.shape[1])], mode='constant', constant_values=0)
+        labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]),
+                                 (0, Config.max_object - labels.shape[1])], mode='constant', constant_values=0)
         return self.transform(current_image, next_image, current_box, next_box, labels)
 
     def __len__(self):
@@ -259,8 +262,7 @@ def collate_fn(batch):
         boxes_pre.append(sample[2][0].float())
         boxes_next.append(sample[3][0].float())
         labels.append(sample[4].float())
-        indexes_pre.append(sample[2][1].byte())
-        indexes_next.append(sample[3][1].byte())
-    return torch.stack(img_pre, 0), torch.stack(img_next, 0), torch.stack(boxes_pre, 0), \
-           torch.stack(boxes_next, 0), torch.stack(labels, 0), torch.stack(indexes_pre, 0).unsqueeze(1), \
-           torch.stack(indexes_next, 0).unsqueeze(1)
+        indexes_pre.append(sample[2][1].float())
+        indexes_next.append(sample[3][1].float())
+    return torch.stack(img_pre, 0), torch.stack(img_next, 0), torch.stack(boxes_pre, 0), torch.stack(boxes_next, 0), \
+           torch.stack(labels, 0), torch.stack(indexes_pre, 0).unsqueeze(1), torch.stack(indexes_next, 0).unsqueeze(1)

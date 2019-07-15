@@ -1,4 +1,7 @@
-from config import Config
-
-if Config.from_training:
-    print('asdfd')
+# -*- coding: <encoding name> -*-
+"""
+@authors: rayenwang
+@time: 2019/7/15 20:05
+@file: zzzz.py
+@description:
+"""

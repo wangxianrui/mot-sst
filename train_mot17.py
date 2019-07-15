@@ -46,6 +46,7 @@ def train():
     # from training
     start_epoch = 0
     if Config.from_training:
+        print('continue trainint from {}'.format(Config.from_training))
         pretrained = torch.load(Config.from_training)
         net.module.load_state_dict(pretrained['state_dict'])
         optimizer.load_state_dict(pretrained['optimizer'])
@@ -54,12 +55,12 @@ def train():
     for epoch in range(start_epoch, Config.max_epoch):
         if epoch in Config.lr_epoch:
             adjust_lr(optimizer)
-        epoch_loss = list()
 
         for index, iter_data in enumerate(tqdm(dataloader)):
             if (index + 1) % 4:
                 continue
             img_pre, img_next, boxes_pre, boxes_next, labels, valid_pre, valid_next = iter_data
+
             if Config.use_cuda:
                 img_pre = img_pre.cuda()
                 img_next = img_next.cuda()
@@ -71,18 +72,17 @@ def train():
                     labels = labels.cuda()
 
             # forward
-            out = net(img_pre, img_next, boxes_pre, boxes_next, valid_pre, valid_next)
+            out = net(img_pre, img_next, boxes_pre, boxes_next)
 
-            # TODO move float() to dataset
-            valid_pre = valid_pre.float()
-            valid_next = valid_next.float()
+            # # TODO move float() to dataset ✔
+            # valid_pre = valid_pre.float()
+            # valid_next = valid_next.float()
 
             loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
                 criterion(out, labels, valid_pre, valid_next)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            epoch_loss += [loss.data.cpu()]
 
             if (index + 1) % Config.log_setp == 0:
                 print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'

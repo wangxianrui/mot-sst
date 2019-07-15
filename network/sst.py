@@ -9,7 +9,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from config import Config
-import os
 
 
 class SST(nn.Module):
@@ -35,15 +34,13 @@ class SST(nn.Module):
         self.false_constant = Config.false_constant
         self.use_gpu = use_gpu
 
-    def forward(self, x_pre, x_next, b_pre, b_next, valid_pre=None, valid_next=None):
+    def forward(self, x_pre, x_next, b_pre, b_next):
         '''
         the sst net forward stream
         :param x_pre:  the previous image, (1, 3, 900, 900) FT
         :param x_next: the next image,  (1, 3, 900, 900) FT
         :param b_pre: the previous box center, (1, 60, 1, 1, 2) FT
         :param b_next: the next box center, (1, 60, 1, 1, 2) FT
-        :param valid_pre: the previous box mask, (1, 1, 61) BT
-        :param valid_next: the next box mask, (1, 1, 61) BT
         :return: the similarity matrix
         '''
         sources_pre = list()

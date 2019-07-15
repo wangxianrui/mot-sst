@@ -2,6 +2,11 @@ import os
 import argparse
 from config import Config
 
+"""
+get detection files from dataset
+and then we can show it
+"""
+
 
 def main(args):
     result_dir = os.path.join(Config.data_root, 'detection', args.type)

@@ -31,11 +31,6 @@ class Config:
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 30
-    lower_saturation = 0.7
-    upper_saturation = 1.5
-    lower_contrast = 0.7
-    upper_contrast = 1.5
-    max_expand = 1.2
     lr_init = 1e-2
     lr_decay = 0.1
     lr_epoch = [50, 80, 100, 110]

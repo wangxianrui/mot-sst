@@ -17,7 +17,7 @@ class TrackUtil:
         '''
         # get the center, and format it in (-1, 1)
         center = (2 * detection[:, 0:2] + detection[:, 2:4]) - 1.0
-        center = torch.from_numpy(center.astype(float)).float()
+        center = torch.from_numpy(center.astype(np.float32)).float()
         center.unsqueeze_(0)
         center.unsqueeze_(2)
         center.unsqueeze_(3)
