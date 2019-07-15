@@ -16,8 +16,11 @@ import numpy as np
 import copy
 import csv
 import motmetrics
+from config import Config
 
 mh = motmetrics.metrics.create()
+data_root = os.path.join(Config.data_root, 'train')
+txts_dir = os.path.join(Config.result_dir, 'train/txt')
 
 
 def main(args):
@@ -33,14 +36,14 @@ def main(args):
     for txt_file in txts_list:
         vname = txt_file[:-4]
         print(vname)
-        if not os.path.exists(os.path.join(args.data_root, vname, "gt/gt.txt")):
-            print('error {} have no ground truth file in {}'.format(vname, args.data_root))
+        if not os.path.exists(os.path.join(data_root, vname, "gt/gt.txt")):
+            print('error {} have no ground truth file in {}'.format(vname, data_root))
 
         acc = motmetrics.MOTAccumulator(auto_id=True)
 
-        frames_gt = read_txt_gtV2(os.path.join(args.data_root, vname, "gt/gt.txt"))
-        h, w, _ = cv2.imread(os.path.join(args.data_root, vname, 'img1/000001.jpg')).shape
-        frames_prdt = read_txt_predictionV2(os.path.join(args.txts_dir, txt_file))
+        frames_gt = read_txt_gtV2(os.path.join(data_root, vname, "gt/gt.txt"))
+        h, w, _ = cv2.imread(os.path.join(data_root, vname, 'img1/000001.jpg')).shape
+        frames_prdt = read_txt_predictionV2(os.path.join(txts_dir, txt_file))
 
         # evaluations
         for frameid in frames_gt.keys():
@@ -195,8 +198,6 @@ def read_txt_predictionV2(textpath):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_root', default='dataset/MOT17/train', help='dataset root path')
-    parser.add_argument('--txts_dir', default='result/train/txt', help='txt files directory')
     parser.add_argument('--threshold', default=0.5, type=float, help='distance matrix threshold')
     args = parser.parse_args()
     main(args)

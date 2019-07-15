@@ -8,17 +8,20 @@ import pandas as pd
 import numpy as np
 import cv2
 from tqdm import tqdm
+from config import Config
+
+data_root = os.path.join(Config.data_root, 'train')
 
 
 def main(args):
     colorList = get_spaced_colors(100)
     random.shuffle(colorList)
-    video_list = os.listdir(args.data_root)
+    video_list = os.listdir(data_root)
 
     for video_name in video_list:
-        txt_file = os.path.join(args.data_root, video_name, 'gt/gt.txt')
+        txt_file = os.path.join(data_root, video_name, 'gt/gt.txt')
         avi_file = os.path.join(args.save_dir, video_name + '.avi')
-        img_dir = os.path.join(args.data_root, video_name, 'img1')
+        img_dir = os.path.join(data_root, video_name, 'img1')
         temp_img = cv2.imread(os.path.join(img_dir + '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
@@ -78,7 +81,6 @@ def get_spaced_colors(n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Images from Results')
-    parser.add_argument('--data_root', default='dataset/MOT17/train/')
     parser.add_argument('--save_dir', default='ground_truth')
     args = parser.parse_args()
     if not os.path.exists(args.save_dir):
