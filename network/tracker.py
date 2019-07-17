@@ -4,7 +4,7 @@ import torch
 from scipy.optimize import linear_sum_assignment
 
 from .sst import build_sst
-from config import Config
+from config import EvalConfig as Config
 
 
 class TrackUtil:
@@ -22,7 +22,7 @@ class TrackUtil:
         center.unsqueeze_(2)
         center.unsqueeze_(3)
 
-        if TrackerConfig.cuda:
+        if Config.use_cuda:
             return center.cuda()
         return center
 
@@ -33,13 +33,13 @@ class TrackUtil:
         :param image: same as update parameter
         :return: the transformed image FloatTensor (i.e. 1x3x900x900)
         """
-        image = cv2.resize(image, TrackerConfig.image_size).astype(np.float32)
-        image -= TrackerConfig.mean_pixel
+        image = cv2.resize(image, Config.image_size).astype(np.float32)
+        image -= Config.mean_pixel
         image /= 127.5
         image = torch.from_numpy(image).float()
         image = image.permute(2, 0, 1)
         image.unsqueeze_(dim=0)
-        if TrackerConfig.cuda:
+        if Config.use_cuda:
             return image.cuda()
         return image
 
@@ -85,7 +85,7 @@ class TrackUtil:
         f_min = n_min.frame_index
 
         # not recorded in recorder
-        if frame_index - f_min >= TrackerConfig.max_track_node:
+        if frame_index - f_min >= Config.max_track_frame:
             return None
 
         return recorder.all_similarity[f_max][f_min][n_min.id, n_max.id]
@@ -144,92 +144,92 @@ class TrackUtil:
                 t1.nodes.insert(insert_pos, t2.nodes[i])
 
         # remove some nodes in t1 in order to keep t1 satisfy the max nodes
-        if len(t1.nodes) > TrackerConfig.max_track_node:
-            t1.nodes = t1.nodes[-TrackerConfig.max_track_node:]
+        if len(t1.nodes) > Config.max_track_frame:
+            t1.nodes = t1.nodes[-Config.max_track_frame:]
         t1.age = min(t1.age, t2.age)
         t2.valid = False
 
 
-class TrackerConfig:
-    max_record_frame = 30
-    max_track_age = 30
-    max_track_node = 30
-    # max_draw_track_node = 30
-    max_object = Config.max_object
-    sst_model_path = Config.model_path
-    mean_pixel = Config.mean_pixel
-    image_size = (Config.sst_dim, Config.sst_dim)
-    cuda = Config.use_cuda
-
-    min_iou_frame_gap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    min_iou = [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0]
-
-    min_merge_threshold = 0.9
-
-    max_bad_node = 0.9
-
-    decay = 0.995
-
-    roi_verify_max_iteration = 2
-    roi_verify_punish_rate = 0.6
-
-    @staticmethod
-    def set_configure(all_choice):
-        min_iou_frame_gaps = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
-        min_ious = [
-            [0.3, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0],
-            [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
-            [0.2, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
-            [0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
-            [-1.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0],
-            [0.4, 0.3, 0.25, 0.2, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -4.5, -5.0, -5.5, -6.0, -6.5, -7.0],
-        ]
-
-        decays = [1 - 0.01 * i for i in range(11)]
-
-        roi_verify_max_iterations = [2, 3, 4, 5, 6]
-
-        roi_verify_punish_rates = [0.6, 0.4, 0.2, 0.1, 0.0, 1.0]
-
-        max_track_ages = [i * 3 for i in range(1, 11)]
-        max_track_nodes = [i * 3 for i in range(1, 11)]
-
-        if all_choice is None:
-            return
-        TrackerConfig.min_iou_frame_gap = min_iou_frame_gaps[all_choice[0]]
-        TrackerConfig.min_iou = min_ious[all_choice[0]]
-        TrackerConfig.decay = decays[all_choice[1]]
-        TrackerConfig.roi_verify_max_iteration = roi_verify_max_iterations[all_choice[2]]
-        TrackerConfig.roi_verify_punish_rate = roi_verify_punish_rates[all_choice[3]]
-        TrackerConfig.max_track_age = max_track_ages[all_choice[4]]
-        TrackerConfig.max_track_node = max_track_nodes[all_choice[5]]
-
-    # @staticmethod
-    # def get_configure_str(all_choice):
-    #     return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2],
-    #                                       all_choice[3], all_choice[4], all_choice[5])
-    #
-    # @staticmethod
-    # def get_all_choices():
-    #     # return [(1, 1, 0, 0, 4, 2)]
-    #     return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5)
-    #             for i3 in range(5) for i4 in range(5) for i5 in range(5) for i6 in range(5)]
-    #
-    # @staticmethod
-    # def get_all_choices_decay():
-    #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
-    #
-    # @staticmethod
-    # def get_all_choices_max_track_node():
-    #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
-    #
-    # @staticmethod
-    # def get_choices_age_node():
-    #     return [(0, 0, 0, 0, a, n) for a in range(10) for n in range(10)]
-    #
-    # @staticmethod
-    # def get_ua_choice():
-    #     return (5, 0, 4, 1, 5, 5)
+# class Config:
+#     max_record_frame = 30
+#     max_track_age = 30
+#     max_track_node = 30
+#     # max_draw_track_node = 30
+#     max_object = Config.max_object
+#     sst_model_path = Config.model_path
+#     mean_pixel = Config.mean_pixel
+#     image_size = (Config.sst_dim, Config.sst_dim)
+#     cuda = Config.use_cuda
+# 
+#     min_iou_frame_gap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+#     min_iou = [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0]
+# 
+#     min_merge_threshold = 0.9
+# 
+#     max_bad_node = 0.9
+# 
+#     decay = 0.995
+# 
+#     roi_verify_max_iteration = 2
+#     roi_verify_punish_rate = 0.6
+# 
+#     @staticmethod
+#     def set_configure(all_choice):
+#         min_iou_frame_gaps = [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]]
+#         min_ious = [
+#             [0.3, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0],
+#             [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+#             [0.2, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+#             [0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0],
+#             [-1.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0],
+#             [0.4, 0.3, 0.25, 0.2, 0.1, 0.0, -1.0, -2.0, -3.0, -4.0, -4.5, -5.0, -5.5, -6.0, -6.5, -7.0],
+#         ]
+# 
+#         decays = [1 - 0.01 * i for i in range(11)]
+# 
+#         roi_verify_max_iterations = [2, 3, 4, 5, 6]
+# 
+#         roi_verify_punish_rates = [0.6, 0.4, 0.2, 0.1, 0.0, 1.0]
+# 
+#         max_track_ages = [i * 3 for i in range(1, 11)]
+#         max_track_nodes = [i * 3 for i in range(1, 11)]
+# 
+#         if all_choice is None:
+#             return
+#         Config.min_iou_frame_gap = min_iou_frame_gaps[all_choice[0]]
+#         Config.min_iou = min_ious[all_choice[0]]
+#         Config.decay = decays[all_choice[1]]
+#         Config.roi_verify_max_iteration = roi_verify_max_iterations[all_choice[2]]
+#         Config.roi_verify_punish_rate = roi_verify_punish_rates[all_choice[3]]
+#         Config.max_track_age = max_track_ages[all_choice[4]]
+#         Config.max_track_node = max_track_nodes[all_choice[5]]
+# 
+#     # @staticmethod
+#     # def get_configure_str(all_choice):
+#     #     return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2],
+#     #                                       all_choice[3], all_choice[4], all_choice[5])
+#     #
+#     # @staticmethod
+#     # def get_all_choices():
+#     #     # return [(1, 1, 0, 0, 4, 2)]
+#     #     return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5)
+#     #             for i3 in range(5) for i4 in range(5) for i5 in range(5) for i6 in range(5)]
+#     #
+#     # @staticmethod
+#     # def get_all_choices_decay():
+#     #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
+#     #
+#     # @staticmethod
+#     # def get_all_choices_max_track_node():
+#     #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
+#     #
+#     # @staticmethod
+#     # def get_choices_age_node():
+#     #     return [(0, 0, 0, 0, a, n) for a in range(10) for n in range(10)]
+#     #
+#     # @staticmethod
+#     # def get_ua_choice():
+#     #     return (5, 0, 4, 1, 5, 5)
 
 
 class FeatureRecorder:
@@ -238,7 +238,6 @@ class FeatureRecorder:
     """
 
     def __init__(self):
-        self.max_record_frame = TrackerConfig.max_record_frame
         self.all_frame_index = np.array([], dtype=int)
         self.all_features = {}
         self.all_boxes = {}
@@ -249,7 +248,7 @@ class FeatureRecorder:
         # # if the coming frame in the new frame
         # if frame_index not in self.all_frame_index:
         # if the recorder have reached the max_record_frame.
-        if len(self.all_frame_index) == self.max_record_frame:
+        if len(self.all_frame_index) == Config.max_track_frame:
             del_frame = self.all_frame_index[0]
             del self.all_features[del_frame]
             del self.all_boxes[del_frame]
@@ -264,7 +263,7 @@ class FeatureRecorder:
 
         self.all_similarity[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
-            delta = pow(TrackerConfig.decay, (frame_index - pre_index) / 3.0)
+            delta = pow(Config.decay, (frame_index - pre_index) / 3.0)
             pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], features, fill_up_column=False)
             self.all_similarity[frame_index][pre_index] = pre_similarity * delta
 
@@ -349,12 +348,12 @@ class Node:
         self.det_index = id
 
     def get_box(self, frame_index, recoder):
-        if frame_index - self.frame_index >= TrackerConfig.max_record_frame:
+        if frame_index - self.frame_index >= Config.max_track_frame:
             return None
         return recoder.all_boxes[self.frame_index][self.det_index, :]
 
     def get_iou(self, frame_index, recoder, box_id):
-        if frame_index - self.frame_index >= TrackerConfig.max_track_node:
+        if frame_index - self.frame_index >= Config.max_track_frame:
             return None
         return recoder.all_iou[frame_index][self.frame_index][self.det_index, box_id]
 
@@ -393,11 +392,10 @@ class Track:
             n = self.nodes[-1]
             iou = n.get_iou(frame_index, recorder, node.det_index)
             delta_frame = frame_index - n.frame_index
-            if delta_frame in TrackerConfig.min_iou_frame_gap:
+            if delta_frame in Config.min_iou_frame_gap:
                 # TODO add index to min iou
-                iou_index = TrackerConfig.min_iou_frame_gap.index(delta_frame)
-                # if iou < TrackerConfig.min_iou[iou_index]:
-                if iou < TrackerConfig.min_iou[-1]:
+                iou_index = Config.min_iou_frame_gap.index(delta_frame)
+                if iou < Config.min_iou[-1]:
                     return False
         self.nodes.append(node)
         self.reset_age()
@@ -408,7 +406,7 @@ class Track:
         for n in self.nodes:
             f = n.frame_index
             id = n.det_index
-            if frame_index - f >= TrackerConfig.max_track_node:
+            if frame_index - f >= Config.max_track_frame:
                 continue
             similarity += [recorder.all_similarity[frame_index][f][id, :]]
 
@@ -419,12 +417,12 @@ class Track:
     def verify(self, frame_index, recorder, box_id):
         for n in self.nodes:
             delta_f = frame_index - n.frame_index
-            if delta_f in TrackerConfig.min_iou_frame_gap:
-                iou_index = TrackerConfig.min_iou_frame_gap.index(delta_f)
+            if delta_f in Config.min_iou_frame_gap:
+                iou_index = Config.min_iou_frame_gap.index(delta_f)
                 iou = n.get_iou(frame_index, recorder, box_id)
                 if iou is None:
                     continue
-                if iou < TrackerConfig.min_iou[iou_index]:
+                if iou < Config.min_iou[iou_index]:
                     return False
         return True
 
@@ -447,7 +445,7 @@ class Tracks:
         self.volatile_tracks()
 
     def volatile_tracks(self):
-        if len(self.tracks) > TrackerConfig.max_object:
+        if len(self.tracks) > Config.max_object:
             # start to delete the most oldest tracks
             all_ages = [t.age for t in self.tracks]
             oldest_track_index = np.argmax(all_ages)
@@ -487,7 +485,7 @@ class Tracks:
         keep_track_set = list()
         for i, t in enumerate(self.tracks):
             t.add_age()
-            if t.age > TrackerConfig.max_track_age:
+            if t.age > Config.max_track_frame:
                 continue
             keep_track_set.append(i)
 
@@ -512,7 +510,7 @@ class Tracks:
             if i in used_indexes:
                 continue
             max_track_index = np.argmax(res[i, :])
-            if i != max_track_index and res[i, max_track_index] > TrackerConfig.min_merge_threshold:
+            if i != max_track_index and res[i, max_track_index] > Config.min_merge_threshold:
                 used_indexes += [max_track_index]
                 merge_pair += [(i, max_track_index)]
 
@@ -527,21 +525,15 @@ class Tracks:
 class SSTTracker:
     def __init__(self):
         Track._id_pool = 0
-        self.first_run = True
-        self.image_size = TrackerConfig.image_size
-        self.model_path = TrackerConfig.sst_model_path
-        self.cuda = TrackerConfig.cuda
-        self.mean_pixel = TrackerConfig.mean_pixel
-        self.max_object = TrackerConfig.max_object
         self.frame_index = 0
-        self.load_model()
         self.recorder = FeatureRecorder()
         self.tracks = Tracks()
+        self.sst = build_sst('test')
+        self.load_model()
 
     def load_model(self):
         # load the model
-        self.sst = build_sst('test')
-        if self.cuda:
+        if Config.use_cuda:
             self.sst.load_state_dict(torch.load(Config.model_path))
             self.sst = self.sst.cuda()
         else:
@@ -589,7 +581,7 @@ class SSTTracker:
 
             # verification by iou
             verify_iteration = 0
-            while verify_iteration < TrackerConfig.roi_verify_max_iteration:
+            while verify_iteration < Config.roi_verify_max_iteration:
                 is_change_y = False
                 for i in row_index:
                     box_id = col_index[i]
@@ -599,7 +591,7 @@ class SSTTracker:
                         continue
                     t = self.tracks.get_track_by_id(track_id)
                     if not t.verify(self.frame_index, self.recorder, box_id):
-                        similarity[i, box_id] *= TrackerConfig.roi_verify_punish_rate
+                        similarity[i, box_id] *= Config.roi_verify_punish_rate
                         is_change_y = True
                 if is_change_y:
                     row_index, col_index = linear_sum_assignment(-similarity)

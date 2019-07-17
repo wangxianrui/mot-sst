@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import torch
 import torch.utils.data as data
-from config import Config
+from config import TrainConfig as Config
 from .augmentations import SSTTrainAugment
 
 
@@ -64,7 +64,8 @@ class GTSingleParser:
     parser one video sequence
     '''
 
-    def __init__(self, folder, min_visibility=Config.min_visibility, min_gap=Config.min_gap_frame, max_gap=Config.max_gap_frame):
+    def __init__(self, folder, min_visibility=Config.min_visibility,
+                 min_gap=Config.min_gap_frame, max_gap=Config.max_gap_frame):
         self.min_gap = min_gap
         self.max_gap = max_gap
         # 1. get the gt path and image folder
@@ -140,7 +141,7 @@ class GTSingleParser:
                 choice_gap = list(range(self.min_gap, self.max_gap))
                 if self.min_gap != 0:
                     choice_gap.append(0)
-                while not temp_frame_index in self.recorder:
+                while temp_frame_index not in self.recorder:
                     gap_frame = random.choice(choice_gap)
                     temp_frame_index = next_frame_index + gap_frame
                 next_frame_index = temp_frame_index

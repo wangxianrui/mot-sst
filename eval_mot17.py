@@ -4,9 +4,9 @@ from tqdm import tqdm
 import time
 import numpy as np
 
-from config import Config
+from config import EvalConfig as Config
 from pipline.mot_eval_dataset import MOTEvalDataset
-from network.tracker import SSTTracker, TrackerConfig
+from network.tracker import SSTTracker
 
 
 class Timer(object):
@@ -39,8 +39,6 @@ def eval(args):
     if not os.path.exists(os.path.join(Config.result_dir, args.type, 'txt')):
         os.makedirs(os.path.join(Config.result_dir, args.type, 'txt'))
 
-    choice = (0, 0, 4, 0, 3, 3)
-    TrackerConfig.set_configure(choice)
     video_list = os.listdir(os.path.join(Config.data_root, args.type))
     timer = Timer()
     for vname in video_list:

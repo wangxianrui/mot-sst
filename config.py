@@ -5,15 +5,8 @@ TrainConfig(Config)
 EvalConfig(Config)
 """
 
-class Config:
-    pass
-
-
-class 
-
 
 class Config:
-    '''common'''
     data_root = '../dataset/MOT17'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
@@ -28,12 +21,14 @@ class Config:
     final_net = [1040, 512, 256, 128, 64, 1]  # final_net[0] = np.sum(selector_channel) * 2
     vgg_source = [15, 25, -1]
     false_constant = 10
-    '''train'''
+    detector = 'FRCNN'  # DPM, SDP, FRCNN
+
+
+class TrainConfig(Config):
     backbone = 'pretrained/vgg16_reducedfc.pth'
     from_training = ''
     batch_size = 1
     num_workers = 8
-    detector = 'FRCNN'  # DPM, SDP, FRCNN
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 30
@@ -45,25 +40,16 @@ class Config:
     weight_decay = 5e-4
     log_setp = 1
     save_step = 1
-    '''eval'''
+
+
+class EvalConfig(Config):
     model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result/'
-
-
-class TrackerConfig:
-    cuda = Config.use_cuda
     decay = 1.0
     image_size = (Config.sst_dim, Config.sst_dim)
-    max_bad_node = 0.9
-    max_draw_track_node = 30
-    max_object = Config.max_object
-    max_record_frame = 30
-    max_track_age = 12
-    max_track_node = 12
-    mean_pixel = Config.mean_pixel
+    max_track_frame = 10
     min_iou = [0.3, 0.0, -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -7.0]
     min_iou_frame_gap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     min_merge_threshold = 0.9
     roi_verify_punish_rate = 0.6
     roi_verify_max_iteration = 6
-    sst_model_path = Config.model_path

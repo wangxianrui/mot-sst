@@ -16,7 +16,7 @@ import numpy as np
 import copy
 import csv
 import motmetrics
-from config import Config
+from config import EvalConfig as Config
 
 mh = motmetrics.metrics.create()
 data_root = os.path.join(Config.data_root, 'train')

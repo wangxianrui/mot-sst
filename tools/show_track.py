@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import cv2
 from tqdm import tqdm
-from config import Config
+from config import EvalConfig as Config
 
 
 def main(args):

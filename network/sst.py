@@ -311,4 +311,5 @@ def build_sst(phase, size=900):
         print('Error: Sorry only SST 900 is supported currently!')
         return
 
-    return SST(phase, *selector(vgg(Config.base_net, 3), add_extras(Config.extra_net, 1024)), add_final(Config.final_net), Config.use_cuda)
+    return SST(phase, *selector(vgg(Config.base_net, 3), add_extras(Config.extra_net, 1024)),
+               add_final(Config.final_net), Config.use_cuda)

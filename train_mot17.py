@@ -5,7 +5,7 @@ import torch.utils.data
 import torch.nn
 from torch.utils.tensorboard import SummaryWriter
 
-from config import Config
+from config import TrainConfig as Config
 from network.sst import build_sst
 from network.sst_loss import SSTLoss
 from pipline.mot_train_dataset import MOTTrainDataset, collate_fn
