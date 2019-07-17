@@ -28,7 +28,7 @@ def train():
     print('loading dataset...')
     dataset = MOTTrainDataset()
     dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True,
-                                             num_workers=Config.num_workers, collate_fn=collate_fn)
+                                             num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
 
     # create model
     net = torch.nn.DataParallel(build_sst('train'))
@@ -57,8 +57,6 @@ def train():
             adjust_lr(optimizer)
 
         for index, iter_data in enumerate(tqdm(dataloader)):
-            if (index + 1) % 4:
-                continue
             img_pre, img_next, boxes_pre, boxes_next, labels, valid_pre, valid_next = iter_data
 
             if Config.use_cuda:
@@ -73,10 +71,6 @@ def train():
 
             # forward
             out = net(img_pre, img_next, boxes_pre, boxes_next)
-
-            # # TODO move float() to dataset ✔
-            # valid_pre = valid_pre.float()
-            # valid_next = valid_next.float()
 
             loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
                 criterion(out, labels, valid_pre, valid_next)

@@ -1,5 +1,10 @@
+# -*- coding: <encoding name> -*-
 """
-convert the track result txt --> image
+@authors: rayenwang
+@time: 2019/7/15 20:44
+@file: show_track.py
+@description:
+    convert the result file to avi
 """
 import random
 import argparse

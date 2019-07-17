@@ -4,6 +4,8 @@
 @time: 2019/7/15 20:44
 @file: get_clean_detection.py
 @description:
+    get preprocessed detection with NMS and confidence threshold
+    the new detection file saved into cdet directory in dataset
 """
 
 import os
@@ -25,7 +27,7 @@ for mode in ['train', 'test']:
         cdet_data = np.load(cdet_file, allow_pickle=True).item()
         for frame_index in cdet_data.keys():
             for line in cdet_data[frame_index]:
-                clean_detection.append([int(frame_index), -1] + line + [-1, -1, -1])
+                clean_detection.append([int(frame_index), -1] + line + [1, -1, -1, -1])
         clean_detection = np.asarray(clean_detection)
         clean_detection[:, 4] -= clean_detection[:, 2]
         clean_detection[:, 5] -= clean_detection[:, 3]

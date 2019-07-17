@@ -24,7 +24,7 @@ txts_dir = os.path.join(Config.result_dir, 'train/txt')
 
 
 def main(args):
-    txts_list = os.listdir(args.txts_dir)
+    txts_list = os.listdir(txts_dir)
 
     total_fn = 0
     total_fp = 0

@@ -10,12 +10,12 @@ from config import Config
 class TrackUtil:
     @staticmethod
     def convert_detection(detection):
-        '''
+        """
         transform the current detection center to [-1, 1]
         :param detection: detection
         :return: translated detection
-        '''
-        # get the center, and format it in (-1, 1)
+        """
+        # get the center, and format it in (-1, 1),  2 * x + w - 1
         center = (2 * detection[:, 0:2] + detection[:, 2:4]) - 1.0
         center = torch.from_numpy(center.astype(np.float32)).float()
         center.unsqueeze_(0)
@@ -28,13 +28,14 @@ class TrackUtil:
 
     @staticmethod
     def convert_image(image):
-        '''
+        """
         transform image to the FloatTensor (1, 3,size, size)
         :param image: same as update parameter
         :return: the transformed image FloatTensor (i.e. 1x3x900x900)
-        '''
+        """
         image = cv2.resize(image, TrackerConfig.image_size).astype(np.float32)
         image -= TrackerConfig.mean_pixel
+        image /= 127.5
         image = torch.from_numpy(image).float()
         image = image.permute(2, 0, 1)
         image.unsqueeze_(dim=0)
@@ -91,14 +92,14 @@ class TrackUtil:
 
     @staticmethod
     def get_merge_similarity(t1, t2, frame_index, recorder):
-        '''
+        """
         Get the similarity between two tracks
         :param t1: track 1
         :param t2: track 2
         :param frame_index: current frame_index
         :param recorder: recorder
         :return: the similairty (float value). if valid, return None
-        '''
+        """
         merge_value = []
         if t1 is t2:
             return None
@@ -124,12 +125,12 @@ class TrackUtil:
 
     @staticmethod
     def merge(t1, t2):
-        '''
+        """
         merge t2 to t1, after that t2 is set invalid
         :param t1: track 1
         :param t2: track 2
         :return: None
-        '''
+        """
         all_f1 = [n.frame_index for n in t1.nodes]
         all_f2 = [n.frame_index for n in t2.nodes]
 
@@ -153,7 +154,7 @@ class TrackerConfig:
     max_record_frame = 30
     max_track_age = 30
     max_track_node = 30
-    max_draw_track_node = 30
+    # max_draw_track_node = 30
     max_object = Config.max_object
     sst_model_path = Config.model_path
     mean_pixel = Config.mean_pixel
@@ -203,36 +204,38 @@ class TrackerConfig:
         TrackerConfig.max_track_age = max_track_ages[all_choice[4]]
         TrackerConfig.max_track_node = max_track_nodes[all_choice[5]]
 
-    @staticmethod
-    def get_configure_str(all_choice):
-        return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2], all_choice[3], all_choice[4], all_choice[5])
-
-    @staticmethod
-    def get_all_choices():
-        # return [(1, 1, 0, 0, 4, 2)]
-        return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5) for i3 in range(5) for i4 in range(5) for i5 in range(5) for i6 in range(5)]
-
-    @staticmethod
-    def get_all_choices_decay():
-        return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
-
-    @staticmethod
-    def get_all_choices_max_track_node():
-        return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
-
-    @staticmethod
-    def get_choices_age_node():
-        return [(0, 0, 0, 0, a, n) for a in range(10) for n in range(10)]
-
-    @staticmethod
-    def get_ua_choice():
-        return (5, 0, 4, 1, 5, 5)
+    # @staticmethod
+    # def get_configure_str(all_choice):
+    #     return "{}_{}_{}_{}_{}_{}".format(all_choice[0], all_choice[1], all_choice[2],
+    #                                       all_choice[3], all_choice[4], all_choice[5])
+    #
+    # @staticmethod
+    # def get_all_choices():
+    #     # return [(1, 1, 0, 0, 4, 2)]
+    #     return [(i1, i2, i3, i4, i5, i6) for i1 in range(5) for i2 in range(5)
+    #             for i3 in range(5) for i4 in range(5) for i5 in range(5) for i6 in range(5)]
+    #
+    # @staticmethod
+    # def get_all_choices_decay():
+    #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
+    #
+    # @staticmethod
+    # def get_all_choices_max_track_node():
+    #     return [(1, i2, 0, 0, 4, 2) for i2 in range(11)]
+    #
+    # @staticmethod
+    # def get_choices_age_node():
+    #     return [(0, 0, 0, 0, a, n) for a in range(10) for n in range(10)]
+    #
+    # @staticmethod
+    # def get_ua_choice():
+    #     return (5, 0, 4, 1, 5, 5)
 
 
 class FeatureRecorder:
-    '''
+    """
     Record features and boxes every frame
-    '''
+    """
 
     def __init__(self):
         self.max_record_frame = TrackerConfig.max_record_frame
@@ -243,54 +246,55 @@ class FeatureRecorder:
         self.all_iou = {}
 
     def update(self, sst, frame_index, features, boxes):
-        # if the coming frame in the new frame
-        if frame_index not in self.all_frame_index:
-            # if the recorder have reached the max_record_frame.
-            if len(self.all_frame_index) == self.max_record_frame:
-                del_frame = self.all_frame_index[0]
-                del self.all_features[del_frame]
-                del self.all_boxes[del_frame]
-                del self.all_similarity[del_frame]
-                del self.all_iou[del_frame]
-                self.all_frame_index = self.all_frame_index[1:]
+        # # if the coming frame in the new frame
+        # if frame_index not in self.all_frame_index:
+        # if the recorder have reached the max_record_frame.
+        if len(self.all_frame_index) == self.max_record_frame:
+            del_frame = self.all_frame_index[0]
+            del self.all_features[del_frame]
+            del self.all_boxes[del_frame]
+            del self.all_similarity[del_frame]
+            del self.all_iou[del_frame]
+            self.all_frame_index = self.all_frame_index[1:]
 
-            # add new item for all_frame_index, all_features and all_boxes. Besides, also add new similarity
-            self.all_frame_index = np.append(self.all_frame_index, frame_index)
-            self.all_features[frame_index] = features
-            self.all_boxes[frame_index] = boxes
+        # add new item for all_frame_index, all_features and all_boxes. Besides, also add new similarity
+        self.all_frame_index = np.append(self.all_frame_index, frame_index)
+        self.all_features[frame_index] = features
+        self.all_boxes[frame_index] = boxes
 
-            self.all_similarity[frame_index] = {}
-            for pre_index in self.all_frame_index[:-1]:
-                delta = pow(TrackerConfig.decay, (frame_index - pre_index) / 3.0)
-                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], features, fill_up_column=False)
-                self.all_similarity[frame_index][pre_index] = pre_similarity * delta
+        self.all_similarity[frame_index] = {}
+        for pre_index in self.all_frame_index[:-1]:
+            delta = pow(TrackerConfig.decay, (frame_index - pre_index) / 3.0)
+            pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], features, fill_up_column=False)
+            self.all_similarity[frame_index][pre_index] = pre_similarity * delta
 
-            self.all_iou[frame_index] = {}
-            for pre_index in self.all_frame_index[:-1]:
-                iou = TrackUtil.get_iou(self.all_boxes[pre_index], boxes)
-                self.all_iou[frame_index][pre_index] = iou
-        else:
-            self.all_features[frame_index] = features
-            self.all_boxes[frame_index] = boxes
-            index = self.all_frame_index.__index__(frame_index)
-
-            for pre_index in self.all_frame_index[:index + 1]:
-                if pre_index == self.all_frame_index[-1]:
-                    continue
-
-                pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], self.all_features[-1])
-                self.all_similarity[frame_index][pre_index] = pre_similarity
-
-                iou = TrackUtil.get_iou(self.all_boxes[pre_index], boxes)
-                self.all_similarity[frame_index][pre_index] = iou
+        self.all_iou[frame_index] = {}
+        for pre_index in self.all_frame_index[:-1]:
+            iou = TrackUtil.get_iou(self.all_boxes[pre_index], boxes)
+            self.all_iou[frame_index][pre_index] = iou
+        # else:
+        #     # useless
+        #     self.all_features[frame_index] = features
+        #     self.all_boxes[frame_index] = boxes
+        #     index = self.all_frame_index.__index__(frame_index)
+        #
+        #     for pre_index in self.all_frame_index[:index + 1]:
+        #         if pre_index == self.all_frame_index[-1]:
+        #             continue
+        #
+        #         pre_similarity = sst.forward_stacker_features(self.all_features[pre_index], self.all_features[-1])
+        #         self.all_similarity[frame_index][pre_index] = pre_similarity
+        #
+        #         iou = TrackUtil.get_iou(self.all_boxes[pre_index], boxes)
+        #         self.all_similarity[frame_index][pre_index] = iou
 
     def get_feature(self, frame_index, detection_index):
-        '''
+        """
         get the feature by the specified frame index and detection index
         :param frame_index: start from 0
         :param detection_index: start from 0
         :return: the corresponding feature at frame index and detection index
-        '''
+        """
 
         if frame_index in self.all_frame_index:
             features = self.all_features[frame_index]
@@ -332,38 +336,38 @@ class FeatureRecorder:
 
 
 class Node:
-    '''
+    """
     The Node is the basic element of a track. it contains the following information:
     1) extracted feature (it'll get removed when it isn't active
     2) box (a box (l, t, r, b)
     3) label (active label indicating keeping the features)
     4) detection, the formated box
-    '''
+    """
 
     def __init__(self, frame_index, id):
         self.frame_index = frame_index
-        self.id = id
+        self.det_index = id
 
     def get_box(self, frame_index, recoder):
         if frame_index - self.frame_index >= TrackerConfig.max_record_frame:
             return None
-        return recoder.all_boxes[self.frame_index][self.id, :]
+        return recoder.all_boxes[self.frame_index][self.det_index, :]
 
     def get_iou(self, frame_index, recoder, box_id):
         if frame_index - self.frame_index >= TrackerConfig.max_track_node:
             return None
-        return recoder.all_iou[frame_index][self.frame_index][self.id, box_id]
+        return recoder.all_iou[frame_index][self.frame_index][self.det_index, box_id]
 
 
 class Track:
-    '''
+    """
     Track is the class of track. it contains all the node and manages the node. it contains the following information:
     1) all the nodes
     2) track id. it is unique it identify each track
     3) track pool id. it is a number to give a new id to a new track
     4) age. age indicates how old is the track
     5) max_age. indicates the dead age of this track
-    '''
+    """
     _id_pool = 0
 
     def __init__(self):
@@ -387,7 +391,7 @@ class Track:
         # iou judge
         if len(self.nodes) > 0:
             n = self.nodes[-1]
-            iou = n.get_iou(frame_index, recorder, node.id)
+            iou = n.get_iou(frame_index, recorder, node.det_index)
             delta_frame = frame_index - n.frame_index
             if delta_frame in TrackerConfig.min_iou_frame_gap:
                 # TODO add index to min iou
@@ -403,14 +407,13 @@ class Track:
         similarity = []
         for n in self.nodes:
             f = n.frame_index
-            id = n.id
+            id = n.det_index
             if frame_index - f >= TrackerConfig.max_track_node:
                 continue
             similarity += [recorder.all_similarity[frame_index][f][id, :]]
 
         if len(similarity) == 0:
             return None
-        a = np.array(similarity)
         return np.sum(np.array(similarity), axis=0)
 
     def verify(self, frame_index, recorder, box_id):
@@ -427,15 +430,14 @@ class Track:
 
 
 class Tracks:
-    '''
+    """
     Track set. It contains all the tracks and manage the tracks. it has the following information
     1) tracks. the set of tracks
     2) keep the previous image and features
-    '''
+    """
 
     def __init__(self):
         self.tracks = list()  # the set of tracks
-        self.max_drawing_track = TrackerConfig.max_draw_track_node
 
     def __getitem__(self, item):
         return self.tracks[item]
@@ -547,32 +549,27 @@ class SSTTracker:
         self.sst.eval()
 
     def update(self, image, detection, frame_index):
-        '''
-        Update the state of tracker, the following jobs should be done:
-        1) extract the features
-        2) stack the features together
-        3) get the similarity matrix
-        4) do assignment work
-        5) save the previous image
-        :param image: the opencv readed image, format is hxwx3
-        :param detections: detection array. numpy array (l, r, w, h) and they all formated in (0, 1)
-        '''
-
+        """
+        :param image:  original image
+        :param detection: [b, n, 4]
+        :param frame_index: start from 0
+        :return:
+        """
         self.frame_index = frame_index
 
-        #  TODO move to dataset
         # format the image and detection
         h, w, _ = image.shape
         image = TrackUtil.convert_image(image)
-        detection_org = np.copy(detection)
-        detection = TrackUtil.convert_detection(detection)
+        # detection_org = np.copy(detection)
+        # detection = TrackUtil.convert_detection(detection)
 
-        # features can be (1, 10, 450)
-        features = self.sst.forward_feature_extracter(image, detection)
+        # features can be (b, n, 520)
+        features = self.sst.forward_feature_extracter(image, TrackUtil.convert_detection(np.copy(detection)))
 
         # update recorder
-        self.recorder.update(self.sst, self.frame_index, features.data, detection_org)
+        self.recorder.update(self.sst, self.frame_index, features.data, detection)
 
+        # init
         if self.frame_index == 0 or len(self.tracks.tracks) == 0:
             for i in range(detection.shape[1]):
                 t = Track()
@@ -583,12 +580,12 @@ class SSTTracker:
             return
 
         # get tracks similarity
-        y, ids = self.tracks.get_similarity(self.frame_index, self.recorder)
+        similarity, ids = self.tracks.get_similarity(self.frame_index, self.recorder)
 
-        if len(y) > 0:
+        if len(similarity) > 0:
             # 3) find the corresponding by the similar matrix
-            row_index, col_index = linear_sum_assignment(-y)
-            col_index[col_index >= detection_org.shape[0]] = -1
+            row_index, col_index = linear_sum_assignment(-similarity)
+            col_index[col_index >= detection.shape[0]] = -1
 
             # verification by iou
             verify_iteration = 0
@@ -602,16 +599,14 @@ class SSTTracker:
                         continue
                     t = self.tracks.get_track_by_id(track_id)
                     if not t.verify(self.frame_index, self.recorder, box_id):
-                        y[i, box_id] *= TrackerConfig.roi_verify_punish_rate
+                        similarity[i, box_id] *= TrackerConfig.roi_verify_punish_rate
                         is_change_y = True
                 if is_change_y:
-                    row_index, col_index = linear_sum_assignment(-y)
-                    col_index[col_index >= detection_org.shape[0]] = -1
+                    row_index, col_index = linear_sum_assignment(-similarity)
+                    col_index[col_index >= detection.shape[0]] = -1
                 else:
                     break
                 verify_iteration += 1
-
-            # print(verify_iteration)
 
             # 4) update the tracks
             for i in row_index:
@@ -624,7 +619,7 @@ class SSTTracker:
                 t.add_node(self.frame_index, self.recorder, node)
 
             # 5) add new track
-            for col in range(len(detection_org)):
+            for col in range(len(detection)):
                 if col not in col_index:
                     node = Node(self.frame_index, col)
                     t = Track()

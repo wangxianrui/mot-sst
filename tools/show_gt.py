@@ -1,6 +1,13 @@
+# -*- coding: <encoding name> -*-
 """
-convert the track result txt --> image
+@authors: rayenwang
+@time: 2019/7/15 20:44
+@file: show_gt.py
+@description:
+    show ground truth in gt.txt to avi
+
 """
+
 import random
 import argparse
 import os

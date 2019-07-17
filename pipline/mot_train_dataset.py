@@ -73,7 +73,7 @@ class GTSingleParser:
 
         # 2. read the gt data
         gt_file = pd.read_csv(gt_file_path, header=None)
-        gt_file = gt_file[gt_file[6] == 1]  # only person label
+        gt_file = gt_file[gt_file[6] == 1]
         gt_file = gt_file[gt_file[8] > min_visibility]
         gt_group = gt_file.groupby(0)
         gt_group_keys = gt_group.indices.keys()
@@ -183,7 +183,9 @@ class GTParser:
     def __init__(self):
         # 1. get all the folders
         data_root = os.path.join(Config.data_root, 'train')
-        all_folders = sorted([os.path.join(data_root, i) for i in os.listdir(data_root) if os.path.isdir(os.path.join(data_root, i)) and i.find(Config.detector) != -1])
+        all_folders = sorted([os.path.join(data_root, i)
+                              for i in os.listdir(data_root)
+                              if os.path.isdir(os.path.join(data_root, i)) and i.find(Config.detector) != -1])
         # 2. parser video sequence
         self.parsers = [GTSingleParser(folder) for folder in all_folders]
 
@@ -223,13 +225,7 @@ class MOTTrainDataset(data.Dataset):
     '''
 
     def __init__(self):
-        # 1. init all the variables
-        # self.data_root = Config.data_root
         self.transform = SSTTrainAugment(Config.sst_dim, Config.mean_pixel)
-        # self.detector = Config.detector
-        # self.max_object = Config.max_object
-
-        # 2. init GTParser
         self.parser = GTParser()
 
     def __getitem__(self, item):

@@ -70,8 +70,10 @@ class SubtractMeans(object):
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         img_pre = img_pre.astype(np.float32)
         img_pre -= self.mean
+        img_pre /= 127.5
         img_next = img_next.astype(np.float32)
         img_next -= self.mean
+        img_next /= 127.5
         return img_pre.astype(np.float32), img_next.astype(np.float32), boxes_pre, boxes_next, labels
 
 
@@ -277,12 +279,11 @@ class FormatBoxes(object):
         boxes_pre: [N, 4]
         '''
         if not self.keep_box:
-            # format to -1 -- 1
+            # format to -1 -- 1     x1 + x2 - 1
             f = lambda boxes: np.expand_dims(np.expand_dims(
-                2 * (boxes[:, :2] + boxes[:, 2:]) - 1, axis=1), axis=1)
+                boxes[:, :2] + boxes[:, 2:] - 1, axis=1), axis=1)
         else:
-            f = lambda boxes: np.expand_dims(np.expand_dims(np.concatenate(
-                [(boxes[:, :2] + boxes[:, 2:]) - 1, boxes[:, 2:6]], axis=1), axis=1), axis=1)
+            raise NotImplementedError
 
         # remove inf
         boxes_pre[0] = f(boxes_pre[0])

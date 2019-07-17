@@ -44,8 +44,11 @@ def eval(args):
     video_list = os.listdir(os.path.join(Config.data_root, args.type))
     timer = Timer()
     for vname in video_list:
+        if Config.detector not in vname:
+            continue
+
         img_dir = os.path.join(Config.data_root, args.type, vname, 'img1')
-        det_file = os.path.join(Config.data_root, args.type, vname, 'det/det.txt')
+        det_file = os.path.join(Config.data_root, args.type, vname, 'cdet/det.txt')
         res_file = os.path.join(Config.result_dir, args.type, 'txt', vname + '.txt')
         result = list()
 
@@ -54,23 +57,13 @@ def eval(args):
         dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file, min_confidence=0.0)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
-            # TODO
-            # return formated img, det, and ori_shape for output
             img, det = next(dataset_iter)
             if img is None or det is None or len(det) == 0:
                 continue
-
-            # TODO
-            # move format to dataset
-            # detection && track
-            if len(det) > Config.max_object:
-                det = det[:Config.max_object, :]
             h, w, _ = img.shape
-            det[:, [2, 4]] /= float(w)
-            det[:, [3, 5]] /= float(h)
 
             timer.tic()
-            tracker.update(img, det[:, 2:6], i)
+            tracker.update(img, det, i)
             timer.toc()
 
             # save result

@@ -37,6 +37,8 @@
     > python tool/get_detection.py
         get detection txt from dataset, and then use show_track to show the detection
         
+    > python tool/create_clean_detection.py
+        get clean detection from dataset, iou confidence
 
 
 

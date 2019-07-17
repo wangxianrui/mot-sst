@@ -104,6 +104,9 @@ class SST(nn.Module):
         return torch.stack(res, 1)
 
     def forward_stacker2(self, stacker1_pre_output, stacker1_next_output):
+        # TODO
+        # calculate similarity between features use Torch.matmul
+
         stacker1_pre_output = stacker1_pre_output.unsqueeze(2).repeat(1, 1, self.max_object, 1).permute(0, 3, 1, 2)
         stacker1_next_output = stacker1_next_output.unsqueeze(1).repeat(1, self.max_object, 1, 1).permute(0, 3, 1, 2)
 
@@ -111,7 +114,6 @@ class SST(nn.Module):
         stacker1_next_output = self.stacker2_bn(stacker1_next_output.contiguous())
 
         output = torch.cat([stacker1_pre_output, stacker1_next_output], 1)
-
         return output
 
     def forward_final(self, x, final_net):
@@ -165,6 +167,7 @@ class SST(nn.Module):
             new_data = torch.ones(shape) * constant
         return torch.cat([x, new_data], dim=dim)
 
+    # use for tracker
     def forward_stacker_features(self, xp, xn, fill_up_column=True):
         pre_rest_num = self.max_object - xp.shape[1]
         next_rest_num = self.max_object - xn.shape[1]

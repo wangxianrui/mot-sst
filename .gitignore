@@ -7,3 +7,4 @@ logs/
 pretrained/
 result/
 temp/
+clean_detections/

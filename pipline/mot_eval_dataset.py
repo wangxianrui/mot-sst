@@ -2,13 +2,14 @@ import os
 import pandas as pd
 import cv2
 import torch.utils.data
+from config import Config
 
 
 class MOTEvalDataset(torch.utils.data.Dataset):
     def __init__(self, image_folder, detection_file_name, min_confidence=None):
         self.image_folder = image_folder
         self.detection_file_name = detection_file_name
-        self.image_format = os.path.join(self.image_folder, '{:06d}.jpg')
+        self.image_format = os.path.join(self.image_folder, '{0:06d}.jpg')
         self.detection = pd.read_csv(self.detection_file_name, header=None)
         if min_confidence is not None:
             self.detection = self.detection[self.detection[6] > min_confidence]
@@ -35,4 +36,10 @@ class MOTEvalDataset(torch.utils.data.Dataset):
 
     @staticmethod
     def transform(image, detection):
+        if len(detection) > Config.max_object:
+            detection = detection[:Config.max_object, :]
+        h, w, _ = image.shape
+        detection[:, [2, 4]] /= float(w)
+        detection[:, [3, 5]] /= float(h)
+        detection = detection[:, 2:6]
         return image, detection
