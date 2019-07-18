@@ -1,8 +1,16 @@
+'''
+@Author: rayenwang
+@Date: 2019-07-16 17:30:38
+@LastEditTime: 2019-07-17 20:31:48
+@Description: 
+'''
+
 import os
 import pandas as pd
 import cv2
+import numpy as np
 import torch.utils.data
-from config import Config
+from config import EvalConfig as Config
 
 
 class MOTEvalDataset(torch.utils.data.Dataset):
@@ -20,26 +28,35 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         return len(self.detection_group_keys)
 
     def get_detection_by_index(self, index):
-        if index > len(self.detection_group_keys) or self.detection_group_keys.count(index) == 0:
+        if self.detection_group_keys.count(index) == 0:
             return None
         return self.detection_group.get_group(index).values
 
     def get_image_by_index(self, index):
-        if index > len(self.detection_group_keys):
-            return None
-        return cv2.imread(self.image_format.format(index))
+        return cv2.imread(self.image_format.format(index)).astype(np.float32)
 
     def __getitem__(self, item):
         image = self.get_image_by_index(item + 1)
         detection = self.get_detection_by_index(item + 1)
+        if detection is None:
+            return None, None, None, None
         return self.transform(image, detection)
 
     @staticmethod
     def transform(image, detection):
+        # image
+        h, w, _ = image.shape
+        image = cv2.resize(image, Config.image_size)
+        image -= Config.mean_pixel
+        image /= 127.5
+        image = torch.from_numpy(image).float()
+        image = image.permute(2, 0, 1)
+        image.unsqueeze_(dim=0)
+
+        # detection
         if len(detection) > Config.max_object:
             detection = detection[:Config.max_object, :]
-        h, w, _ = image.shape
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
         detection = detection[:, 2:6]
-        return image, detection
+        return image, torch.from_numpy(detection).float(), h, w

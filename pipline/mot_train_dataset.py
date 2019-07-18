@@ -234,7 +234,7 @@ class MOTTrainDataset(data.Dataset):
 
         while current_image is None:
             current_image, current_box, next_image, next_box, labels = \
-                self.parser[item + random.randint(-Config.max_gap_frame, Config.max_gap_frame)]
+                self.parser[item + random.randint(-Config.max_gap_frame / 2, Config.max_gap_frame / 2)]
 
         # change the label to max_object x max_object
         labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]),

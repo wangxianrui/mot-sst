@@ -55,20 +55,22 @@ def eval(args):
         dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file, min_confidence=0.0)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
-            img, det = next(dataset_iter)
-            if img is None or det is None or len(det) == 0:
+            img, det, h, w = next(dataset_iter)
+            if det is None:
                 continue
-            h, w, _ = img.shape
+            if Config.use_cuda:
+                img = img.cuda()
+                det = det.cuda()
 
             timer.tic()
             tracker.update(img, det, i)
             timer.toc()
 
             # save result
-            for t in tracker.tracks:
+            for t in tracker.all_track.tracks:
                 n = t.nodes[-1]
                 if t.age == 1:
-                    b = n.get_box(tracker.frame_index - 1, tracker.recorder)
+                    b = n.get_box(i - 1, tracker.recorder)
                     result.append([i] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
         np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
         print('finished processing {}'.format(res_file))

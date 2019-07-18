@@ -1,9 +1,10 @@
-"""
-SST tracker net
-
-Thanks to ssd pytorch implementation (see https://github.com/amdegroot/ssd.pytorch)
-copyright: shijie Sun (shijieSun@chd.edu.cn)
-"""
+'''
+@Description: In User Settings Edit
+@Author: your name
+@Date: 2019-07-17 17:23:49
+@LastEditTime: 2019-07-17 17:45:43
+@LastEditors: Please set LastEditors
+'''
 
 import torch
 import torch.nn as nn
@@ -11,305 +12,206 @@ import torch.nn.functional as F
 from config import Config
 
 
-class SST(nn.Module):
-    # new: combine two vgg_net
-    def __init__(self, phase, base, extras, selector, final_net, use_gpu=Config.use_cuda):
-        super(SST, self).__init__()
-        self.phase = phase
+class VGG(nn.Module):
+    def __init__(self, in_channels=3):
+        super(VGG, self).__init__()
+        self.in_channels = in_channels
+        self.cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M', 512, 512, 512]
+        self.layers = nn.Sequential(*self.build())
+   
+    def build(self):
+        in_channels = self.in_channels
+        layers = []
+        for v in self.cfg:
+            if v == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            elif v == 'C':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)]
+            else:
+                conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
+                layers += [conv2d, nn.ReLU(inplace=True)]
+                in_channels = v
+        pool5 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=6, dilation=6)
+        conv7 = nn.Conv2d(1024, 1024, kernel_size=1)
+        layers += [pool5, conv6, nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
+        return layers
 
-        # vgg network
-        self.vgg = nn.ModuleList(base)
-        self.extras = nn.ModuleList(extras)
-        self.selector = nn.ModuleList(selector)
-
-        self.stacker2_bn = nn.BatchNorm2d(int(Config.final_net[0] / 2))
-        self.final_dp = nn.Dropout(0.5)
-        self.final_net = nn.ModuleList(final_net)
-
-        self.image_size = Config.sst_dim
-        self.max_object = Config.max_object
-
-        self.false_objects_column = None
-        self.false_objects_row = None
-        self.false_constant = Config.false_constant
-        self.use_gpu = use_gpu
-
-    def forward(self, x_pre, x_next, b_pre, b_next):
-        '''
-        the sst net forward stream
-        :param x_pre:  the previous image, (1, 3, 900, 900) FT
-        :param x_next: the next image,  (1, 3, 900, 900) FT
-        :param b_pre: the previous box center, (1, 60, 1, 1, 2) FT
-        :param b_next: the next box center, (1, 60, 1, 1, 2) FT
-        :return: the similarity matrix
-        '''
-        sources_pre = list()
-        sources_next = list()
-
-        # get source
-        vgg_pre = self.forward_vgg(x_pre, self.vgg, sources_pre)
-        vgg_next = self.forward_vgg(x_next, self.vgg, sources_next)
-        self.forward_extras(vgg_pre, self.extras, sources_pre)
-        self.forward_extras(vgg_next, self.extras, sources_next)
-
-        # select feature from source with bbox
-        feature_pre = self.forward_selector_stacker1(sources_pre, b_pre, self.selector)
-        feature_next = self.forward_selector_stacker1(sources_next, b_next, self.selector)
-
-        #
-        x = self.forward_stacker2(feature_pre, feature_next)
-        x = self.final_dp(x)
-
-        x = self.forward_final(x, self.final_net)
-
-        x = self.add_unmatched_dim(x)
-        return x
-
-    def forward_vgg(self, x, vgg, sources):
+    def forward(self, x):
+        sources = []
         for k in range(16):
-            x = vgg[k](x)
+            x = self.layers[k](x)
         sources.append(x)
-
         for k in range(16, 23):
-            x = vgg[k](x)
+            x = self.layers[k](x)
         sources.append(x)
-
         for k in range(23, 35):
-            x = vgg[k](x)
+            x = self.layers[k](x)
         sources.append(x)
-        return x
+        return x, sources
 
-    def forward_extras(self, x, extras, sources):
-        for k, v in enumerate(extras):
+
+class Extractor(nn.Module):
+    def __init__(self, in_channels=1024):
+        super(Extractor, self).__init__()
+        self.in_channels = in_channels
+        self.cfg = [256, 'S', 512, 128, 'S', 256, 128, 256, 128, 256, 128, 'S', 256, 128, 256]
+        self.layers = nn.Sequential(*self.build())
+
+    def build(self):
+        layers = []
+        in_channels = self.in_channels
+        flag = False
+        for k, v in enumerate(self.cfg):
+            if in_channels != 'S':
+                if v == 'S':
+                    conv2d = nn.Conv2d(in_channels, self.cfg[k + 1], kernel_size=(1, 3)[flag], stride=2, padding=1)
+                    layers += [conv2d, nn.BatchNorm2d(self.cfg[k + 1]), nn.ReLU(inplace=True)]
+                else:
+                    conv2d = nn.Conv2d(in_channels, v, kernel_size=(1, 3)[flag])
+                    layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+                flag = not flag
+            in_channels = v
+        return layers
+
+    def forward(self, x):
+        sources = []
+        for k, v in enumerate(self.layers):
             x = v(x)
             if k % 6 == 3:
                 sources.append(x)
-        return x
+        return x, sources
 
-    def forward_selector_stacker1(self, sources, bbox, selector):
-        '''
-        :param sources: [B, C, H, W]
-        :param bbox: [B, N, 1, 1, 2]
-        :return: the connected feature
-        '''
-        sources = [F.relu(net(x), inplace=True) for net, x in zip(selector, sources)]
 
+class Selector(nn.Module):
+    def __init__(self):
+        super(Selector, self).__init__()
+        self.in_channles = [256, 512, 1024, 512, 256, 256, 256, 256, 256]
+        self.out_channels = [60, 80, 100, 80, 60, 50, 40, 30, 20]
+        self.layers = nn.Sequential(*self.build())
+
+    def build(self):
+        layers = []
+        for i, o in zip(self.in_channles, self.out_channels):
+            layers += [nn.Conv2d(i, o, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))]
+        return layers
+
+    def forward(self, sources, bbox):
+        sources = [F.relu(net(x)) for net, x in zip(self.layers, sources)]
         res = list()
         for box_index in range(bbox.size(1)):
             box_res = list()
             for source_index in range(len(sources)):
                 box_res.append(F.grid_sample(sources[source_index], bbox[:, box_index, :]).squeeze(2).squeeze(2))
             res.append(torch.cat(box_res, 1))
-
         return torch.stack(res, 1)
 
-    def forward_stacker2(self, stacker1_pre_output, stacker1_next_output):
-        # TODO
-        # calculate similarity between features use Torch.matmul
 
-        stacker1_pre_output = stacker1_pre_output.unsqueeze(2).repeat(1, 1, self.max_object, 1).permute(0, 3, 1, 2)
-        stacker1_next_output = stacker1_next_output.unsqueeze(1).repeat(1, self.max_object, 1, 1).permute(0, 3, 1, 2)
+class Final(nn.Module):
+    def __init__(self):
+        super(Final, self).__init__()
+        self.cfg = [1040, 512, 256, 128, 64, 1]
+        self.layers = nn.Sequential(*self.build())
 
-        stacker1_pre_output = self.stacker2_bn(stacker1_pre_output.contiguous())
-        stacker1_next_output = self.stacker2_bn(stacker1_next_output.contiguous())
+    def build(self):
+        layers = []
+        in_channels = self.cfg[0]
+        for v in self.cfg[1:-2]:
+            conv2d = nn.Conv2d(in_channels, v, kernel_size=1, stride=1)
+            layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+            in_channels = v
+        for v in self.cfg[-2:]:
+            conv2d = nn.Conv2d(in_channels, v, kernel_size=1, stride=1)
+            layers += [conv2d, nn.ReLU(inplace=True)]
+            in_channels = v
+        return layers
 
-        output = torch.cat([stacker1_pre_output, stacker1_next_output], 1)
-        return output
+    def forward(self, x):
+        return self.layers(x)
 
-    def forward_final(self, x, final_net):
-        x = x.contiguous()
-        for f in final_net:
-            x = f(x)
-        return x
+
+class SST(nn.Module):
+    def __init__(self):
+        super(SST, self).__init__()
+        self.base = VGG()
+        self.extractor = Extractor()
+        self.selector = Selector()
+        self.final = Final()
+        self.stacker_bn = nn.BatchNorm2d(int(self.final.cfg[0] / 2))
+        self.final_dp = nn.Dropout(0.5)
+
+    def forward(self, x_pre, x_next, b_pre, b_next):
+        """
+        :param x_pre:  b, 3, sst_dim, sst_dim
+        :param x_next: b, 3, sst_dim, sst_dim
+        :param b_pre:  b, N, 1, 1, 2
+        :param b_next: b, N, 1, 1, 2
+        :return:
+        """
+        # forward feature
+        feature_pre = self.forward_feature(x_pre, b_pre)
+        feature_next = self.forward_feature(x_next, b_next)
+        # concate
+        feature = self.stacker_features(feature_pre, feature_next)
+        # final
+        x = self.final_dp(feature)
+        x = self.final(x)
+        return self.add_unmatched_dim(x)
+
+    def forward_feature(self, x, box):
+        sources = list()
+        # base
+        base, source_base = self.base(x)
+        sources += source_base
+        # extra
+        extra, source_extra = self.extractor(base)
+        sources += source_extra
+        # selector
+        feature = self.selector(sources, box)
+        return feature
+
+    def stacker_features(self, features_pre, features_next):
+        # TODO thy another way to calculate correlation
+        features_pre = features_pre.unsqueeze(2).repeat(1, 1, Config.max_object, 1).permute(0, 3, 1, 2)
+        features_next = features_next.unsqueeze(1).repeat(1, Config.max_object, 1, 1).permute(0, 3, 1, 2)
+        features_pre = self.stacker_bn(features_pre.contiguous())
+        features_next = self.stacker_bn(features_next.contiguous())
+        return torch.cat([features_pre, features_next], dim=1)
 
     def add_unmatched_dim(self, x):
-        if self.false_objects_column is None:
-            self.false_objects_column = torch.ones(x.shape[0], x.shape[1], x.shape[2], 1) * self.false_constant
-            if self.use_gpu:
-                self.false_objects_column = self.false_objects_column.cuda()
-        x = torch.cat([x, self.false_objects_column], 3)
-
-        if self.false_objects_row is None:
-            self.false_objects_row = torch.ones(x.shape[0], x.shape[1], 1, x.shape[3]) * self.false_constant
-            if self.use_gpu:
-                self.false_objects_row = self.false_objects_row.cuda()
-        x = torch.cat([x, self.false_objects_row], 2)
+        false_objects_column = torch.ones(x.shape[0], x.shape[1], x.shape[2], 1) * Config.false_constant
+        false_objects_row = torch.ones(x.shape[0], x.shape[1], 1, x.shape[3] + 1) * Config.false_constant
+        if Config.use_cuda:
+            false_objects_column = false_objects_column.cuda()
+            false_objects_row = false_objects_row.cuda()
+        x = torch.cat([x, false_objects_column], 3)
+        x = torch.cat([x, false_objects_row], 2)
         return x
 
-    def forward_feature_extracter(self, x, l):
-        '''
-        extract features from the vgg layers and extra net
-        :param x:
-        :param l:
-        :return: the features
-        '''
-        s = list()
-
-        x = self.forward_vgg(x, self.vgg, s)
-        x = self.forward_extras(x, self.extras, s)
-        x = self.forward_selector_stacker1(s, l, self.selector)
-
-        return x
-
-    def get_similarity(self, image1, detection1, image2, detection2):
-        feature1 = self.forward_feature_extracter(image1, detection1)
-        feature2 = self.forward_feature_extracter(image2, detection2)
-        return self.forward_stacker_features(feature1, feature2, False)
-
-    def resize_dim(self, x, added_size, dim=1, constant=0):
-        if added_size <= 0:
-            return x
-        shape = list(x.shape)
-        shape[dim] = added_size
-        if self.use_gpu:
-            new_data = (torch.ones(shape) * constant).cuda()
-        else:
-            new_data = torch.ones(shape) * constant
-        return torch.cat([x, new_data], dim=dim)
-
-    # use for tracker
-    def forward_stacker_features(self, xp, xn, fill_up_column=True):
-        pre_rest_num = self.max_object - xp.shape[1]
-        next_rest_num = self.max_object - xn.shape[1]
-        pre_num = xp.shape[1]
-        next_num = xn.shape[1]
-
-        x = self.forward_stacker2(self.resize_dim(xp, pre_rest_num, dim=1), self.resize_dim(xn, next_rest_num, dim=1))
-        x = self.final_dp(x)
-        x = self.forward_final(x, self.final_net)
-        x = x.contiguous()
-
-        # add zero
-        if next_num < self.max_object:
-            x[0, 0, :, next_num:] = 0
-        if pre_num < self.max_object:
-            x[0, 0, pre_num:, :] = 0
-        x = x[0, 0, :]
-
-        # add false unmatched row and column
-        x = self.resize_dim(x, 1, dim=0, constant=self.false_constant)
-        x = self.resize_dim(x, 1, dim=1, constant=self.false_constant)
-
-        x_f = F.softmax(x, dim=1)
-        x_t = F.softmax(x, dim=0)
-        # slice
-        last_row, last_col = x_f.shape
-        row_slice = list(range(pre_num)) + [last_row - 1]
-        col_slice = list(range(next_num)) + [last_col - 1]
-        x_f = x_f[row_slice, :]
-        x_f = x_f[:, col_slice]
-        x_t = x_t[row_slice, :]
-        x_t = x_t[:, col_slice]
-
-        x = torch.zeros(pre_num, next_num + 1)
-        x[0:pre_num, 0:next_num] = (x_f[0:pre_num, 0:next_num] + x_t[0:pre_num, 0:next_num]) / 2.0
-        x[:, next_num:next_num + 1] = x_f[:pre_num, next_num:next_num + 1]
-        if fill_up_column and pre_num > 1:
-            x = torch.cat([x, x[:, next_num:next_num + 1].repeat(1, pre_num - 1)], dim=1)
-        if self.use_gpu:
-            y = x.data.cpu().numpy()
-        else:
-            y = x.data.numpy()
-        return y
+    def get_similarity(self, feature1, feature2):
+        feature1_size = feature1.shape[1]
+        feature2_size = feature2.shape[1]
+        feature1 = F.pad(feature1, [0, 0, 0, Config.max_object - feature1_size], value=0)
+        feature2 = F.pad(feature2, [0, 0, 0, Config.max_object - feature2_size], value=0)
+        # forward
+        feature = self.stacker_features(feature1, feature2)
+        x = self.final_dp(feature)
+        x = self.final(x)
+        x = self.add_unmatched_dim(x)[0, 0, :]
+        # softmax and select
+        x_pre = F.softmax(x, dim=1)
+        x_next = F.softmax(x, dim=0)
+        # get last column for unmatched object
+        row_slice = list(range(feature1_size))
+        col_slice = list(range(feature2_size)) + [Config.max_object]
+        x_pre = x_pre[row_slice, :][:, col_slice]
+        x_next = x_next[row_slice, :][:, col_slice]
+        res = (x_pre + x_next) / 2
+        return res.detach().numpy()
 
 
-def vgg(cfg, i, batch_norm=False):
-    layers = []
-    in_channels = i
-    for v in cfg:
-        if v == 'M':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
-        elif v == 'C':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)]
-        else:
-            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
-            if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-            else:
-                layers += [conv2d, nn.ReLU(inplace=True)]
-            in_channels = v
-
-    pool5 = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
-    conv6 = nn.Conv2d(512, 1024, kernel_size=3, padding=6, dilation=6)
-    conv7 = nn.Conv2d(1024, 1024, kernel_size=1)
-    layers += [pool5, conv6, nn.ReLU(inplace=True), conv7, nn.ReLU(inplace=True)]
-    return layers
-
-
-def add_extras(cfg, i, batch_norm=True):
-    layers = []
-    in_channels = i
-    flag = False
-    for k, v in enumerate(cfg):
-        if in_channels != 'S':
-            if v == 'S':
-                conv2d = nn.Conv2d(in_channels, cfg[k + 1], kernel_size=(1, 3)[flag], stride=2, padding=1)
-                if batch_norm:
-                    layers += [conv2d, nn.BatchNorm2d(cfg[k + 1]), nn.ReLU(inplace=True)]
-                else:
-                    layers += [conv2d, nn.ReLU(inplace=True)]
-            else:
-                conv2d = nn.Conv2d(in_channels, v, kernel_size=(1, 3)[flag])
-                if batch_norm:
-                    layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-                else:
-                    layers += [conv2d, nn.ReLU(inplace=True)]
-            flag = not flag
-        in_channels = v
-    return layers
-
-
-def add_final(cfg, batch_normal=True):
-    layers = []
-    in_channels = int(cfg[0])
-    layers += []
-    # 1. add the 1:-2 layer with BatchNorm
-    for v in cfg[1:-2]:
-        conv2d = nn.Conv2d(in_channels, v, kernel_size=1, stride=1)
-        if batch_normal:
-            layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-        else:
-            layers += [conv2d, nn.ReLU(inplace=True)]
-        in_channels = v
-    # 2. add the -2: layer without BatchNorm for BatchNorm would make the output value normal distribution.
-    for v in cfg[-2:]:
-        conv2d = nn.Conv2d(in_channels, v, kernel_size=1, stride=1)
-        layers += [conv2d, nn.ReLU(inplace=True)]
-        in_channels = v
-
-    return layers
-
-
-def selector(vgg, extra_layers, batch_normal=True):
-    '''
-    batch_normal must be same to add_extras batch_normal
-    '''
-    selector_layers = []
-    vgg_source = Config.vgg_source
-
-    for k, v in enumerate(vgg_source):
-        selector_layers += [nn.Conv2d(vgg[v - 1].out_channels, Config.selector_channel[k], kernel_size=3, padding=1)]
-    if batch_normal:
-        for k, v in enumerate(extra_layers[3::6], 3):
-            selector_layers += [nn.Conv2d(v.out_channels, Config.selector_channel[k], kernel_size=3, padding=1)]
-    else:
-        for k, v in enumerate(extra_layers[3::4], 3):
-            selector_layers += [nn.Conv2d(v.out_channels, Config.selector_channel[k], kernel_size=3, padding=1)]
-    return vgg, extra_layers, selector_layers
-
-
-def build_sst(phase, size=900):
-    '''
-    create the SSJ Tracker Object
-    :return: ssj tracker object
-    '''
-    if phase != 'test' and phase != 'train':
-        print('Error: Phase not recognized')
-        return
-
+def build_sst(size=900):
     if size != 900:
         print('Error: Sorry only SST 900 is supported currently!')
         return
-
-    return SST(phase, *selector(vgg(Config.base_net, 3), add_extras(Config.extra_net, 1024)),
-               add_final(Config.final_net), Config.use_cuda)
+    return SST()
