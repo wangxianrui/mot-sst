@@ -3,7 +3,7 @@ import argparse
 from tqdm import tqdm
 import time
 import numpy as np
-
+import torch
 from config import EvalConfig as Config
 from pipline.mot_eval_dataset import MOTEvalDataset
 from network.tracker import SSTTracker
@@ -70,8 +70,8 @@ def eval(args):
             for t in tracker.all_track.tracks:
                 n = t.nodes[-1]
                 if t.age == 1:
-                    b = n.get_box(i - 1, tracker.recorder)
-                    result.append([i] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
+                    b = n.get_box(i, tracker.recorder)
+                    result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
         np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
         print('finished processing {}'.format(res_file))
     print('total time {}'.format(timer.total_time))
@@ -82,4 +82,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--type', default='test', help='eval train or test dataset')
     args = parser.parse_args()
-    eval(args)
+    with torch.no_grad():
+        eval(args)

@@ -1,9 +1,8 @@
 '''
-@Description: In User Settings Edit
-@Author: your name
-@Date: 2019-07-17 17:23:49
-@LastEditTime: 2019-07-17 17:45:43
-@LastEditors: Please set LastEditors
+@Author: rayenwang
+@Date: 2019-07-19 17:49:39
+@LastEditTime: 2019-07-19 18:47:40
+@Description: 
 '''
 
 import torch
@@ -18,7 +17,7 @@ class VGG(nn.Module):
         self.in_channels = in_channels
         self.cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M', 512, 512, 512]
         self.layers = nn.Sequential(*self.build())
-   
+
     def build(self):
         in_channels = self.in_channels
         layers = []
@@ -202,12 +201,13 @@ class SST(nn.Module):
         x_pre = F.softmax(x, dim=1)
         x_next = F.softmax(x, dim=0)
         # get last column for unmatched object
-        row_slice = list(range(feature1_size))
+        row_slice = list(range(feature1_size)) + [Config.max_object]
         col_slice = list(range(feature2_size)) + [Config.max_object]
         x_pre = x_pre[row_slice, :][:, col_slice]
         x_next = x_next[row_slice, :][:, col_slice]
-        res = (x_pre + x_next) / 2
-        return res.detach().numpy()
+        res = (x_pre + x_next)[:-1, :-1] / 2
+        res = torch.cat([res, x_pre[:-1, -1:]], 1)
+        return res
 
 
 def build_sst(size=900):

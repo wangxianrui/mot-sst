@@ -1,4 +1,5 @@
 import os
+import time
 from tqdm import tqdm
 import torch
 import torch.utils.data
@@ -27,30 +28,32 @@ def train():
     # prepare dataset
     print('loading dataset...')
     dataset = MOTTrainDataset()
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, \
-        num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True,
+                                             num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
 
     # create model
     net = torch.nn.DataParallel(build_sst())
     if Config.use_cuda:
         net = net.cuda()
-    print('load backbone from {}'.format(Config.backbone))
-    net.module.base.layers.load_state_dict(torch.load(Config.backbone))
-    net.train()
 
     # criterion && optimizer
     criterion = SSTLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, \
-        momentum=Config.momentum, weight_decay=Config.weight_decay)
+    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init,
+                                momentum=Config.momentum, weight_decay=Config.weight_decay)
 
     # from training
     start_epoch = 0
     if Config.from_training:
         print('continue trainint from {}'.format(Config.from_training))
-        pretrained = torch.load(Config.from_training)
-        net.module.base.layers.load_state_dict(pretrained['state_dict'])
+        pretrained = torch.load(Config.from_training, map_location='cuda:0' if Config.use_cuda else 'cpu')
+        net.module.load_state_dict(pretrained['state_dict'])
         optimizer.load_state_dict(pretrained['optimizer'])
         start_epoch = pretrained['epoch'] + 1
+    else:
+        print('load backbone from {}'.format(Config.backbone))
+        net.module.base.layers.load_state_dict(torch.load(Config.backbone,
+                                                          map_location='cuda:0' if Config.use_cuda else 'cpu'))
+    net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):
         if epoch in Config.lr_epoch:
@@ -74,13 +77,14 @@ def train():
 
             loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
                 criterion(out, labels, valid_pre, valid_next)
+
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'\
-                    .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
+                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'
+                      .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)
@@ -93,7 +97,7 @@ def train():
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
                 ckpt_dict = {'state_dict': net.module.state_dict(), \
-                    'optimizer': optimizer.state_dict(), 'epoch': epoch}
+                             'optimizer': optimizer.state_dict(), 'epoch': epoch}
                 print('saving checkpoint {}'.format(ckpt_name))
                 torch.save(ckpt_dict, os.path.join(Config.ckpt_dir, ckpt_name))
 

@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-16 17:30:38
-@LastEditTime: 2019-07-17 20:31:48
+@LastEditTime: 2019-07-19 18:52:43
 @Description: 
 '''
 
@@ -55,8 +55,10 @@ class MOTEvalDataset(torch.utils.data.Dataset):
 
         # detection
         if len(detection) > Config.max_object:
+            # index = torch.argsort(detection, descending=False, dim=0)[:, 6]
+            # detection = detection[index[:Config.max_object], :]
             detection = detection[:Config.max_object, :]
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
-        detection = detection[:, 2:6]
-        return image, torch.from_numpy(detection).float(), h, w
+        detection = torch.from_numpy(detection[:, 2:6]).float()
+        return image, detection, h, w

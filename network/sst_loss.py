@@ -13,8 +13,8 @@ class SSTLoss(torch.nn.Module):
 
         :param predict: b, 1, N+1, N+1
         :param target: b, 1, N+1, N+1
-        :param mask0: pre mask b, 1, N+1
-        :param mask1: next mask b, 1, N+1
+        :param mask0: pre_mask b, 1, N+1
+        :param mask1: next_mask b, 1, N+1
         :return:
         mask, predict, target:  N+1, N+1
         *_pre:  N, N+1
@@ -43,6 +43,7 @@ class SSTLoss(torch.nn.Module):
         target_next_num = target_next.sum()
         target_union_num = target_union.sum()
 
+        # TODO ensure num > 0
         # loss 4 part
         if target_pre_num > 0:
             loss_pre = -(target_pre * torch.log(predict_pre)).sum() / target_pre_num

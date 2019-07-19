@@ -47,8 +47,7 @@ class Compose(object):
 
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         for t in self.transforms:
-            img_pre, img_next, boxes_pre, boxes_next, labels = \
-                t(img_pre, img_next, boxes_pre, boxes_next, labels)
+            img_pre, img_next, boxes_pre, boxes_next, labels = t(img_pre, img_next, boxes_pre, boxes_next, labels)
         return img_pre, img_next, boxes_pre, boxes_next, labels
 
 
@@ -332,8 +331,7 @@ class PhotometricDistort(object):
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         im_pre = img_pre.copy()
         im_next = img_next.copy()
-        im_pre, im_next, boxes_pre, boxes_next, labels = \
-            self.rand_brightness(im_pre, im_next, boxes_pre, boxes_next, labels)
+        im_pre, im_next, boxes_pre, boxes_next, labels = self.rand_brightness(im_pre, im_next, boxes_pre, boxes_next, labels)
         if random.randint(2):
             distort = Compose(self.pd[:-1])
         else:

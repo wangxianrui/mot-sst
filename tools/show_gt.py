@@ -29,18 +29,19 @@ def main(args):
         txt_file = os.path.join(data_root, video_name, 'gt/gt.txt')
         avi_file = os.path.join(args.save_dir, video_name + '.avi')
         img_dir = os.path.join(data_root, video_name, 'img1')
-        temp_img = cv2.imread(os.path.join(img_dir + '000001.jpg'))
+        temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
 
         res_raw = pd.read_csv(txt_file, sep=',', header=None)
         res_raw = np.array(res_raw).astype(np.float32)
-        res_raw = res_raw[res_raw[:, -2] == 1, :]  # only show person
+        res_raw = res_raw[res_raw[:, -3] == 1, :]
+        res_raw = res_raw[res_raw[:, -1] >= 0.3, :]
         res_raw[:, 0:6] = np.array(res_raw[:, 0:6]).astype(np.int)
         n_frame = max(res_raw[:, 0])
         print('video_name: {} || total number of frames: {}'.format(video_name, n_frame))
         for t in tqdm(range(1, int(n_frame))):
-            img_name = img_dir + str(t).zfill(6) + '.jpg'
+            img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
             img = cv2.imread(img_name)
             overlay = img.copy()
             row_ind = np.where(res_raw[:, 0] == t)[0]

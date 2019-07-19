@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 14:58:49
-@LastEditTime: 2019-07-18 11:15:49
+@LastEditTime: 2019-07-19 18:51:33
 @Description: 
 '''
 import torch
@@ -9,31 +9,6 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from config import EvalConfig as Config
 from .sst import build_sst
-
-
-def get_iou(pre_boxes, next_boxes):
-    h = len(pre_boxes)
-    w = len(next_boxes)
-    if h == 0 or w == 0:
-        return []
-    iou = np.zeros((h, w), dtype=float)
-    for i in range(h):
-        b1 = np.copy(pre_boxes[i, :])
-        b1[2:] = b1[:2] + b1[2:]
-        for j in range(w):
-            b2 = np.copy(next_boxes[j, :])
-            b2[2:] = b2[:2] + b2[2:]
-            delta_h = min(b1[2], b2[2]) - max(b1[0], b2[0])
-            delta_w = min(b1[3], b2[3]) - max(b1[1], b2[1])
-            if delta_h < 0 or delta_w < 0:
-                expand_area = (max(b1[2], b2[2]) - min(b1[0], b2[0])) * (max(b1[3], b2[3]) - min(b1[1], b2[1]))
-                area = (b1[2] - b1[0]) * (b1[3] - b1[1]) + (b2[2] - b2[0]) * (b2[3] - b2[1])
-                iou[i, j] = -(expand_area - area) / area
-            else:
-                overlap = delta_h * delta_w
-                area = (b1[2] - b1[0]) * (b1[3] - b1[1]) + (b2[2] - b2[0]) * (b2[3] - b2[1]) - max(overlap, 0)
-                iou[i, j] = overlap / area
-    return iou
 
 
 class FeatureRecorder:
@@ -50,7 +25,7 @@ class FeatureRecorder:
     '''
 
     def __init__(self):
-        self.all_frame_index = np.array([], dtype=int)
+        self.all_frame_index = []
         self.all_features = {}
         self.all_boxes = {}
         self.all_similarity = {}
@@ -63,21 +38,43 @@ class FeatureRecorder:
             del self.all_boxes[del_frame]
             del self.all_similarity[del_frame]
             del self.all_iou[del_frame]
-            self.all_frame_index = self.all_frame_index[1:]
+            del self.all_frame_index[0]
         # add new attribute
-        self.all_frame_index = np.append(self.all_frame_index, frame_index)
+        self.all_frame_index.append(frame_index)
         self.all_features[frame_index] = features
         self.all_boxes[frame_index] = boxes
 
         self.all_similarity[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
-            pre_similarity = sst.get_similarity(self.all_features[pre_index], features)
+            pre_similarity = sst.get_similarity(self.all_features[pre_index].clone(), features.clone())
             self.all_similarity[frame_index][pre_index] = pre_similarity
 
         self.all_iou[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
-            iou = get_iou(self.all_boxes[pre_index], boxes)
+            iou = self.get_iou(self.all_boxes[pre_index].clone(), boxes.clone())
             self.all_iou[frame_index][pre_index] = iou
+
+    def get_iou(self, bboxes1, bboxes2):
+        bboxes1[:, 2:] += bboxes1[:, :2]
+        bboxes2[:, 2:] += bboxes2[:, :2]
+        bboxes1.unsqueeze_(dim=1)
+        bboxes2.unsqueeze_(dim=0)
+        bboxes1 = bboxes1.permute(2, 0, 1)
+        bboxes2 = bboxes2.permute(2, 0, 1)
+        # Intersection bbox and volume.
+        int_xmin = torch.max(bboxes1[0], bboxes2[0])
+        int_ymin = torch.max(bboxes1[1], bboxes2[1])
+        int_xmax = torch.min(bboxes1[2], bboxes2[2])
+        int_ymax = torch.min(bboxes1[3], bboxes2[3])
+
+        int_h = torch.clamp_min(int_ymax - int_ymin, 0)
+        int_w = torch.clamp_min(int_xmax - int_xmin, 0)
+        int_vol = int_h * int_w
+        # Union volume.
+        vol1 = (bboxes1[2] - bboxes1[0]) * (bboxes1[3] - bboxes1[1])
+        vol2 = (bboxes2[2] - bboxes2[0]) * (bboxes2[3] - bboxes2[1])
+        iou = int_vol / (vol1 + vol2 - int_vol)
+        return iou
 
 
 class Node:
@@ -110,7 +107,8 @@ class Track:
             n = self.nodes[-1]
             iou = n.get_iou(frame_index, recorder, node.det_index)
             delta_frame = frame_index - n.frame_index
-            if iou < 0.5**delta_frame:
+            # filter out with low iou
+            if iou < 0.5 ** delta_frame:
                 return
         self.nodes.append(node)
         self.age = 0
@@ -125,41 +123,31 @@ class Track:
             if frame_index - f >= Config.max_track_frame:
                 continue
             similarity += [recorder.all_similarity[frame_index][f][id, :]]
-        return np.sum(np.array(similarity), axis=0)
+        return torch.sum(torch.stack(similarity, dim=0), dim=0)
 
 
 class AllTrack:
     def __init__(self):
         self.tracks = list()
 
-    def get_item_by_trackid(self, trackid):
-        for t in self.tracks:
-            if t.id == trackid:
-                return t
-        return None
+    def add_track(self, track):
+        self.tracks.append(track)
 
     def get_similarity(self, frame_index, recorder):
-        # track_ids = []
         similarity = []
         for t in self.tracks:
             s = t.get_similarity(frame_index, recorder)
             similarity += [s]
-            # track_ids += [t.id]
-        return np.array(similarity)  # , np.array(track_ids)
+        return torch.stack(similarity, dim=0)
 
     def one_frame_pass(self):
-        keep_track_set = list()
-        for i, t in enumerate(self.tracks):
-            t.age += 1
-            if t.age > Config.max_track_frame:
-                continue
-            keep_track_set.append(i)
-        self.tracks = [self.tracks[i] for i in keep_track_set]
-
-    def add_track(self, track):
-        self.tracks.append(track)
-        # TODO
-        # volatile
+        # remove old track
+        temp_tracks = self.tracks.copy()
+        self.tracks.clear()
+        for track in temp_tracks:
+            track.age += 1
+            if track.age < Config.max_track_frame:
+                self.add_track(track)
 
 
 class SSTTracker:
@@ -167,9 +155,10 @@ class SSTTracker:
         self.sst = build_sst()
         self.all_track = AllTrack()
         self.recorder = FeatureRecorder()
-        # self.load_model()
+        self.load_model()
 
     def load_model(self):
+        print('loading model from {}'.format(Config.model_path))
         if Config.use_cuda:
             self.sst.load_state_dict(torch.load(Config.model_path)['state_dict'])
             self.sst = self.sst.cuda()
@@ -180,14 +169,13 @@ class SSTTracker:
     def convert_detection(self, detection):
         # convert detection to -1 -- 1
         center = (2 * detection[:, 0:2] + detection[:, 2:4]) - 1.0
-        center = torch.from_numpy(center.astype(np.float32)).float()
         center.unsqueeze_(0)
         center.unsqueeze_(2)
         center.unsqueeze_(3)
         return center
 
     def update(self, image, detection, frame_index):
-        features = self.sst.forward_feature(image, self.convert_detection(np.copy(detection)))
+        features = self.sst.forward_feature(image, self.convert_detection(detection.clone()))
         self.recorder.update(self.sst, frame_index, features, detection)
         track_num = len(self.all_track.tracks)
         det_num = detection.shape[0]
@@ -202,8 +190,12 @@ class SSTTracker:
         else:
             # similarity between track and detection    track_num * det_num
             similarity = self.all_track.get_similarity(frame_index, self.recorder)
-            additional = np.repeat(np.reshape(np.min(similarity, axis=1), [track_num, 1]), track_num - 1, axis=1)
-            similarity = np.concatenate([similarity, additional], axis=1)
+            additional = torch.repeat_interleave(
+                torch.min(similarity, dim=1)[0].reshape(track_num, 1),
+                track_num - 1,
+                dim=1)
+            similarity = torch.cat([similarity, additional], dim=1).detach().cpu().numpy()
+
             # linear_sum_assignment
             row_index, col_index = linear_sum_assignment(-similarity)
             col_index[col_index >= det_num] = -1
