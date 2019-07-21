@@ -96,12 +96,12 @@ def train():
                 writer.add_scalar('accuracy/accuracy_next', accuracy_next.item(), log_index)
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
-                ckpt_dict = {'state_dict': net.module.state_dict(), \
+                ckpt_dict = {'state_dict': net.module.state_dict(),
                              'optimizer': optimizer.state_dict(), 'epoch': epoch}
                 print('saving checkpoint {}'.format(ckpt_name))
                 torch.save(ckpt_dict, os.path.join(Config.ckpt_dir, ckpt_name))
-
-    torch.save(net.module.state_dict(), os.path.join(Config.ckpt_dir, 'sst900_final.pth'))
+    ckpt_dict = {'state_dict': net.module.state_dict(), 'optimizer': optimizer.state_dict()}
+    torch.save(ckpt_dict, os.path.join(Config.ckpt_dir, 'sst900_final.pth'))
     writer.close()
 
 

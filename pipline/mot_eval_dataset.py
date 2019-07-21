@@ -55,9 +55,8 @@ class MOTEvalDataset(torch.utils.data.Dataset):
 
         # detection
         if len(detection) > Config.max_object:
-            # index = torch.argsort(detection, descending=False, dim=0)[:, 6]
-            # detection = detection[index[:Config.max_object], :]
-            detection = detection[:Config.max_object, :]
+            index = torch.argsort(detection, descending=False, dim=0)[:, 6]
+            detection = detection[index[:Config.max_object], :]
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
         detection = torch.from_numpy(detection[:, 2:6]).float()

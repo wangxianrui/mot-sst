@@ -10,10 +10,10 @@ class Config:
     data_root = '../dataset/MOT17'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
-    use_cuda = True
+    use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 80
+    max_object = 45
     image_size = (sst_dim, sst_dim)
     false_constant = 5
     detector = 'FRCNN'  # DPM, SDP, FRCNN
@@ -21,7 +21,7 @@ class Config:
 
 class TrainConfig(Config):
     backbone = 'pretrained/vgg16_reducedfc.pth'
-    from_training = 'checkpoints/sst900_19_599.pth'
+    from_training = ''
     batch_size = 8
     num_workers = 8
     min_visibility = 0.3
@@ -38,6 +38,6 @@ class TrainConfig(Config):
 
 
 class EvalConfig(Config):
-    model_path = 'checkpoints/sst900_19_599.pth'
+    model_path = 'checkpoints/sst900_final.pth'
     result_dir = 'result/'
     max_track_frame = 10
