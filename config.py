@@ -22,11 +22,11 @@ class Config:
 class TrainConfig(Config):
     backbone = 'pretrained/vgg16_reducedfc.pth'
     from_training = ''
-    batch_size = 8
+    batch_size = 1
     num_workers = 8
     min_visibility = 0.3
     min_gap_frame = 0
-    max_gap_frame = 15
+    max_gap_frame = 10
     lr_init = 1e-2
     lr_decay = 0.1
     lr_epoch = [20, 30, 35, 38]
@@ -38,6 +38,6 @@ class TrainConfig(Config):
 
 
 class EvalConfig(Config):
-    model_path = 'checkpoints/sst900_final.pth'
-    result_dir = 'result/'
+    model_path = 'checkpoints/sst900_2_399.pth'
+    result_dir = 'result'
     max_track_frame = 10

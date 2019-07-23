@@ -29,3 +29,6 @@ import torch.nn.functional as F
 # cv2.namedWindow('win', cv2.WINDOW_NORMAL)
 # cv2.imshow('win', out)
 # cv2.waitKey()
+from config import TrainConfig as Config
+torch.device('cuda:0')
+#torch.load(Config.backbone, map_location='gpu')

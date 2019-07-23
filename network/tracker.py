@@ -103,19 +103,19 @@ class Track:
         Track._id_pool += 1
 
     def add_node(self, frame_index, recorder, node):
+        '''
         if len(self.nodes) > 0:
             n = self.nodes[-1]
             iou = n.get_iou(frame_index, recorder, node.det_index)
             delta_frame = frame_index - n.frame_index
             # filter out with low iou
-            if iou < 0.5 ** delta_frame:
+            if iou < 0.3 ** delta_frame:
                 return
+        '''
         self.nodes.append(node)
         self.age = 0
 
     def get_similarity(self, frame_index, recorder):
-        if len(self.nodes) == 0:
-            return None
         similarity = []
         for n in self.nodes:
             f = n.frame_index

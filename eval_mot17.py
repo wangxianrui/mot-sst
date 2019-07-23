@@ -57,6 +57,7 @@ def eval(args):
         for i in tqdm(range(len(dataset))):
             img, det, h, w = next(dataset_iter)
             if det is None:
+                tracker.all_track.one_frame_pass()
                 continue
             if Config.use_cuda:
                 img = img.cuda()

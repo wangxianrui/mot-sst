@@ -18,12 +18,11 @@ import csv
 import motmetrics
 from config import EvalConfig as Config
 
-mh = motmetrics.metrics.create()
-data_root = os.path.join(Config.data_root, 'train')
-txts_dir = os.path.join(Config.result_dir, 'train/txt')
-
 
 def main(args):
+    mh = motmetrics.metrics.create()
+    data_root = os.path.join(Config.data_root, args.type)
+    txts_dir = os.path.join(Config.result_dir, args.type, 'txt')
     txts_list = os.listdir(txts_dir)
 
     total_fn = 0
@@ -204,5 +203,6 @@ def read_txt_predictionV2(textpath):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--threshold', default=0.5, type=float, help='distance matrix threshold')
+    parser.add_argument('--type', required=True, type=str, help='train or test')
     args = parser.parse_args()
     main(args)

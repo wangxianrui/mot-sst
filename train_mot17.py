@@ -45,14 +45,20 @@ def train():
     start_epoch = 0
     if Config.from_training:
         print('continue trainint from {}'.format(Config.from_training))
-        pretrained = torch.load(Config.from_training, map_location='cuda:0' if Config.use_cuda else 'cpu')
+        if Config.use_cuda:
+            pretrained = torch.load(Config.from_training)
+        else:
+            pretrained = torch.load(Config.from_training, map_location='cpu')
         net.module.load_state_dict(pretrained['state_dict'])
         optimizer.load_state_dict(pretrained['optimizer'])
         start_epoch = pretrained['epoch'] + 1
     else:
         print('load backbone from {}'.format(Config.backbone))
-        net.module.base.layers.load_state_dict(torch.load(Config.backbone,
-                                                          map_location='cuda:0' if Config.use_cuda else 'cpu'))
+        if Config.use_cuda:
+            backbone = torch.load(Config.backbone)
+        else:
+            backbone = torch.load(Config.backbone, map_location='cpu')
+        net.module.base.layers.load_state_dict(backbone)
     net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):
@@ -83,8 +89,9 @@ def train():
             optimizer.step()
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || loss: {:.4f} || lr: {}'
-                      .format(epoch, index, loss.item(), optimizer.param_groups[0]['lr']))
+                print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
+                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
+                    .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)
@@ -97,7 +104,8 @@ def train():
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
                 ckpt_dict = {'state_dict': net.module.state_dict(),
-                             'optimizer': optimizer.state_dict(), 'epoch': epoch}
+                             'optimizer': optimizer.state_dict(),
+                             'epoch': epoch}
                 print('saving checkpoint {}'.format(ckpt_name))
                 torch.save(ckpt_dict, os.path.join(Config.ckpt_dir, ckpt_name))
     ckpt_dict = {'state_dict': net.module.state_dict(), 'optimizer': optimizer.state_dict()}
