@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-19 17:49:39
-@LastEditTime: 2019-07-19 18:47:40
+@LastEditTime: 2019-07-25 20:49:44
 @Description: 
 '''
 
@@ -188,10 +188,6 @@ class SST(nn.Module):
         return x
 
     def get_similarity(self, feature1, feature2):
-        feature1_size = feature1.shape[1]
-        feature2_size = feature2.shape[1]
-        feature1 = F.pad(feature1, [0, 0, 0, Config.max_object - feature1_size], value=0)
-        feature2 = F.pad(feature2, [0, 0, 0, Config.max_object - feature2_size], value=0)
         # forward
         feature = self.stacker_features(feature1, feature2)
         x = self.final_dp(feature)
@@ -200,11 +196,6 @@ class SST(nn.Module):
         # softmax and select
         x_pre = F.softmax(x, dim=1)
         x_next = F.softmax(x, dim=0)
-        # get last column for unmatched object
-        row_slice = list(range(feature1_size)) + [Config.max_object]
-        col_slice = list(range(feature2_size)) + [Config.max_object]
-        x_pre = x_pre[row_slice, :][:, col_slice]
-        x_next = x_next[row_slice, :][:, col_slice]
         res = (x_pre + x_next)[:-1, :-1] / 2
         res = torch.cat([res, x_pre[:-1, -1:]], 1)
         return res

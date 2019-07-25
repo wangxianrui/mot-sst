@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-16 17:30:38
-@LastEditTime: 2019-07-19 18:52:43
+@LastEditTime: 2019-07-25 21:06:53
 @Description: 
 '''
 
@@ -10,6 +10,7 @@ import pandas as pd
 import cv2
 import numpy as np
 import torch.utils.data
+import torch.nn.functional as F
 from config import EvalConfig as Config
 
 
@@ -39,7 +40,7 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         image = self.get_image_by_index(item + 1)
         detection = self.get_detection_by_index(item + 1)
         if detection is None:
-            return None, None, None, None
+            return None, None, None, None, None
         return self.transform(image, detection)
 
     @staticmethod
@@ -51,13 +52,23 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         image /= 127.5
         image = torch.from_numpy(image).float()
         image = image.permute(2, 0, 1)
-        image.unsqueeze_(dim=0)
 
         # detection
-        if len(detection) > Config.max_object:
-            index = torch.argsort(torch.from_numpy(detection), descending=False, dim=0)[:, 6]
-            detection = detection[index[:Config.max_object], :]
+        detection = torch.from_numpy(detection).float()
+        det_num = detection.shape[0]
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
-        detection = torch.from_numpy(detection[:, 2:6]).float()
-        return image, detection, h, w
+        if det_num > Config.max_object:
+            index = torch.argsort(torch.from_numpy(detection), descending=False, dim=0)[:, 6]
+            detection = detection[index[:Config.max_object], :]
+        else:
+            detection = F.pad(detection, [0, 0, 0, Config.max_object - detection.shape[0]], value=-1)
+        detection = detection[:, 2:6]
+
+        # shuffle
+        index = np.arange(Config.max_object)
+        np.random.shuffle(index)
+        detection = detection[index, :]
+        valid_mask = torch.from_numpy(index < det_num).float()
+        valid_index = torch.nonzero(valid_mask).squeeze(dim=1)
+        return image, detection, valid_index, h, w

@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 14:58:49
-@LastEditTime: 2019-07-23 20:15:09
+@LastEditTime: 2019-07-25 20:57:09
 @Description: 
 '''
 
@@ -29,14 +29,16 @@ class FeatureRecorder:
         self.all_frame_index = []
         self.all_features = {}
         self.all_boxes = {}
+        self.all_index = {}
         self.all_similarity = {}
         self.all_iou = {}
 
-    def update(self, sst, frame_index, features, boxes):
+    def update(self, sst, frame_index, features, boxes, valid_index):
         if len(self.all_frame_index) == Config.max_track_frame:
             del_frame = self.all_frame_index[0]
             del self.all_features[del_frame]
             del self.all_boxes[del_frame]
+            del self.all_index[del_frame]
             del self.all_similarity[del_frame]
             del self.all_iou[del_frame]
             del self.all_frame_index[0]
@@ -44,6 +46,7 @@ class FeatureRecorder:
         self.all_frame_index.append(frame_index)
         self.all_features[frame_index] = features
         self.all_boxes[frame_index] = boxes
+        self.all_index[frame_index] = valid_index
 
         self.all_similarity[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
@@ -114,45 +117,21 @@ class Track:
         self.nodes.append(node)
         self.age = 0
 
-    def get_similarity(self, frame_index, recorder):
+    def get_similarity(self, frame_index, recorder, valid_index):
         similarity = []
         for n in self.nodes:
             f = n.frame_index
             id = n.det_index
             if frame_index - f >= Config.max_track_frame:
                 continue
-            similarity += [recorder.all_similarity[frame_index][f][id, :]]
+            similarity += [recorder.all_similarity[frame_index][f][id, :][valid_index]]
         return torch.sum(torch.stack(similarity, dim=0), dim=0)
-
-
-class AllTrack:
-    def __init__(self):
-        self.tracks = list()
-
-    def add_track(self, track):
-        self.tracks.append(track)
-
-    def get_similarity(self, frame_index, recorder):
-        similarity = []
-        for t in self.tracks:
-            s = t.get_similarity(frame_index, recorder)
-            similarity += [s]
-        return torch.stack(similarity, dim=0)
-
-    def one_frame_pass(self):
-        # remove old track
-        temp_tracks = self.tracks.copy()
-        self.tracks.clear()
-        for track in temp_tracks:
-            track.age += 1
-            if track.age < Config.max_track_frame:
-                self.add_track(track)
 
 
 class SSTTracker:
     def __init__(self):
         self.sst = build_sst()
-        self.all_track = AllTrack()
+        self.tracks = list()
         self.recorder = FeatureRecorder()
         self.load_model()
 
@@ -165,30 +144,49 @@ class SSTTracker:
             self.sst.load_state_dict(torch.load(Config.model_path, map_location='cpu')['state_dict'])
         self.sst.eval()
 
-    def convert_detection(self, detection):
-        # convert detection to -1 -- 1
-        center = (2 * detection[:, 0:2] + detection[:, 2:4]) - 1.0
-        center.unsqueeze_(0)
-        center.unsqueeze_(2)
-        center.unsqueeze_(3)
-        return center
+    def add_track(self, track):
+        self.tracks.append(track)
 
-    def update(self, image, detection, frame_index):
-        features = self.sst.forward_feature(image, self.convert_detection(detection.clone()))
-        self.recorder.update(self.sst, frame_index, features, detection)
-        track_num = len(self.all_track.tracks)
-        det_num = detection.shape[0]
+    def get_similarity(self, frame_index, recorder, valid_index):
+        similarity = []
+        for t in self.tracks:
+            s = t.get_similarity(frame_index, recorder, valid_index)
+            similarity += [s]
+        return torch.stack(similarity, dim=0)
+
+    def one_frame_pass(self):
+        # remove old track
+        temp_tracks = self.tracks.copy()
+        self.tracks.clear()
+        for track in temp_tracks:
+            track.age += 1
+            if track.age < Config.max_track_frame:
+                self.add_track(track)
+
+    def update(self, image, detection, valid_index, frame_index):
+        '''
+        @Description: 
+        @Parameter: 
+            image: 3 * dim * dim
+            detection: maxN * 4
+            valid_index: maxN + 1
+        @Return: 
+        '''
+        features = self.sst.forward_feature(image.unsqueeze(0), self.convert_detection(detection.clone()))
+        self.recorder.update(self.sst, frame_index, features, detection, valid_index)
+        track_num = len(self.tracks)
+        det_num = valid_index.shape[0]
 
         # first frame
         if frame_index == 0 or track_num == 0:
-            for i in range(det_num):
+            for index in valid_index:
                 track = Track()
-                node = Node(frame_index, i)
+                node = Node(frame_index, index)
                 track.add_node(frame_index, self.recorder, node)
-                self.all_track.add_track(track)
+                self.add_track(track)
         else:
             # similarity between track and detection    track_num * det_num + 1
-            similarity = self.all_track.get_similarity(frame_index, self.recorder)
+            similarity = self.get_similarity(frame_index, self.recorder, valid_index)
             additional = torch.repeat_interleave(similarity[:, -1].reshape(track_num, 1), track_num - 1, dim=1)
             similarity = torch.cat([similarity, additional], dim=1).detach().cpu().numpy()
 
@@ -197,16 +195,24 @@ class SSTTracker:
             col_index[col_index >= det_num] = -1
             # update tracks
             for i in range(track_num):
-                track = self.all_track.tracks[i]
-                det_index = col_index[i]
+                track = self.tracks[i]
+                det_index = valid_index[col_index[i]]
                 if det_index != -1:
                     node = Node(frame_index, det_index)
                     track.add_node(frame_index, self.recorder, node)
             # add new tracks
             for j in range(det_num):
                 if j not in col_index:
-                    node = Node(frame_index, j)
+                    node = Node(frame_index, valid_index[j])
                     track = Track()
                     track.add_node(frame_index, self.recorder, node)
-                    self.all_track.add_track(track)
-        self.all_track.one_frame_pass()
+                    self.add_track(track)
+        self.one_frame_pass()
+
+    def convert_detection(self, detection):
+        # convert detection to -1 -- 1
+        center = (2 * detection[:, 0:2] + detection[:, 2:4]) - 1.0
+        center.unsqueeze_(0)
+        center.unsqueeze_(2)
+        center.unsqueeze_(3)
+        return center

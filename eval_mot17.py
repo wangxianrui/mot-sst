@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-22 21:30:13
-@LastEditTime: 2019-07-23 14:42:46
+@LastEditTime: 2019-07-25 20:55:18
 @Description: 
 '''
 
@@ -62,20 +62,21 @@ def eval(args):
         dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file, min_confidence=0.0)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
-            img, det, h, w = next(dataset_iter)
+            img, det, index, h, w = next(dataset_iter)
             if det is None:
-                tracker.all_track.one_frame_pass()
+                tracker.one_frame_pass()
                 continue
             if Config.use_cuda:
                 img = img.cuda()
                 det = det.cuda()
+                index = index.cuda()
 
             timer.tic()
-            tracker.update(img, det, i)
+            tracker.update(img, det, index, i)
             timer.toc()
 
             # save result
-            for t in tracker.all_track.tracks:
+            for t in tracker.tracks:
                 n = t.nodes[-1]
                 if t.age == 1:
                     b = n.get_box(i, tracker.recorder)
