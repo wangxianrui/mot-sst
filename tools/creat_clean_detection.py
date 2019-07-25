@@ -1,12 +1,10 @@
-# -*- coding: <encoding name> -*-
-"""
-@authors: rayenwang
-@time: 2019/7/15 20:44
-@file: get_clean_detection.py
-@description:
-    get preprocessed detection with NMS and confidence threshold
-    the new detection file saved into cdet directory in dataset
-"""
+'''
+@Author: rayenwang
+@Date: 2019-07-22 20:51:41
+@LastEditTime: 2019-07-23 14:44:25
+@Description: 
+'''
+
 
 import os
 import numpy as np

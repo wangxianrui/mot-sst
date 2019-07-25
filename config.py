@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 17:34:56
-@LastEditTime: 2019-07-19 18:45:11
+@LastEditTime: 2019-07-23 16:06:52
 @Description: 
 '''
 
@@ -15,7 +15,7 @@ class Config:
     sst_dim = 900
     max_object = 45
     image_size = (sst_dim, sst_dim)
-    false_constant = 5
+    false_constant = 1
     detector = 'FRCNN'  # DPM, SDP, FRCNN
 
 
@@ -38,6 +38,6 @@ class TrainConfig(Config):
 
 
 class EvalConfig(Config):
-    model_path = 'checkpoints/sst900_2_399.pth'
+    model_path = 'checkpoints/sst900_3_199.pth'
     result_dir = 'result'
     max_track_frame = 10

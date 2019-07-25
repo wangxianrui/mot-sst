@@ -1,9 +1,10 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 14:58:49
-@LastEditTime: 2019-07-19 18:51:33
+@LastEditTime: 2019-07-23 20:15:09
 @Description: 
 '''
+
 import torch
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -103,15 +104,13 @@ class Track:
         Track._id_pool += 1
 
     def add_node(self, frame_index, recorder, node):
-        '''
         if len(self.nodes) > 0:
             n = self.nodes[-1]
             iou = n.get_iou(frame_index, recorder, node.det_index)
             delta_frame = frame_index - n.frame_index
             # filter out with low iou
-            if iou < 0.3 ** delta_frame:
+            if iou < 0.3**delta_frame:
                 return
-        '''
         self.nodes.append(node)
         self.age = 0
 
@@ -188,12 +187,9 @@ class SSTTracker:
                 track.add_node(frame_index, self.recorder, node)
                 self.all_track.add_track(track)
         else:
-            # similarity between track and detection    track_num * det_num
+            # similarity between track and detection    track_num * det_num + 1
             similarity = self.all_track.get_similarity(frame_index, self.recorder)
-            additional = torch.repeat_interleave(
-                torch.min(similarity, dim=1)[0].reshape(track_num, 1),
-                track_num - 1,
-                dim=1)
+            additional = torch.repeat_interleave(similarity[:, -1].reshape(track_num, 1), track_num - 1, dim=1)
             similarity = torch.cat([similarity, additional], dim=1).detach().cpu().numpy()
 
             # linear_sum_assignment

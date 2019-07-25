@@ -1,3 +1,10 @@
+'''
+@Author: rayenwang
+@Date: 2019-07-22 20:51:42
+@LastEditTime: 2019-07-23 14:43:00
+@Description: 
+'''
+
 import os
 import time
 from tqdm import tqdm
@@ -28,8 +35,7 @@ def train():
     # prepare dataset
     print('loading dataset...')
     dataset = MOTTrainDataset()
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True,
-                                             num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
 
     # create model
     net = torch.nn.DataParallel(build_sst())
@@ -38,8 +44,7 @@ def train():
 
     # criterion && optimizer
     criterion = SSTLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init,
-                                momentum=Config.momentum, weight_decay=Config.weight_decay)
+    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, weight_decay=Config.weight_decay)
 
     # from training
     start_epoch = 0
@@ -90,8 +95,7 @@ def train():
 
             if (index + 1) % Config.log_setp == 0:
                 print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
-                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
-                    .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
+                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'.format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)
@@ -103,9 +107,7 @@ def train():
                 writer.add_scalar('accuracy/accuracy_next', accuracy_next.item(), log_index)
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
-                ckpt_dict = {'state_dict': net.module.state_dict(),
-                             'optimizer': optimizer.state_dict(),
-                             'epoch': epoch}
+                ckpt_dict = {'state_dict': net.module.state_dict(), 'optimizer': optimizer.state_dict(), 'epoch': epoch}
                 print('saving checkpoint {}'.format(ckpt_name))
                 torch.save(ckpt_dict, os.path.join(Config.ckpt_dir, ckpt_name))
     ckpt_dict = {'state_dict': net.module.state_dict(), 'optimizer': optimizer.state_dict()}

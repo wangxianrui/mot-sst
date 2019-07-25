@@ -1,11 +1,9 @@
-# -*- coding: <encoding name> -*-
-"""
-@authors: rayenwang
-@time: 2019/7/15 20:44
-@file: get_detection.py
-@description:
-    get detetion from dataset, and the we can show the detection result with show_track.py script
-"""
+'''
+@Author: rayenwang
+@Date: 2019-07-22 20:51:41
+@LastEditTime: 2019-07-23 14:43:54
+@Description: 
+'''
 
 import os
 from config import Config
@@ -18,8 +16,7 @@ def main():
         if not os.path.exists(result_dir):
             os.makedirs(result_dir)
         for video_name in video_list:
-            command = 'cp {} {}'.format(os.path.join(Config.data_root, type, video_name, 'cdet/det.txt'),
-                                        os.path.join(result_dir, video_name + '.txt'))
+            command = 'cp {} {}'.format(os.path.join(Config.data_root, type, video_name, 'cdet/det.txt'), os.path.join(result_dir, video_name + '.txt'))
             print(command)
             os.system(command)
 

@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: 2019/7/19 11:12
-@file: get_max_object.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-07-22 20:51:42
+@LastEditTime: 2019-07-23 14:43:47
+@Description: 
+'''
 
 import os
 import pandas as pd

@@ -1,11 +1,10 @@
-# -*- coding: <encoding name> -*-
-"""
-@authors: rayenwang
-@time: 2019/7/15 20:44
-@file: show_track.py
-@description:
-    convert the result file to avi
-"""
+'''
+@Author: rayenwang
+@Date: 2019-07-22 20:51:42
+@LastEditTime: 2019-07-23 14:43:16
+@Description: 
+'''
+
 import random
 import argparse
 import os
