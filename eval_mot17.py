@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-22 21:30:13
-@LastEditTime: 2019-07-25 20:55:18
+@LastEditTime: 2019-07-26 14:29:36
 @Description: 
 '''
 
@@ -53,7 +53,7 @@ def eval(args):
             continue
 
         img_dir = os.path.join(Config.data_root, args.type, vname, 'img1')
-        det_file = os.path.join(Config.data_root, args.type, vname, 'cdet/det.txt')
+        det_file = os.path.join(Config.data_root, args.type, vname, 'det/det.txt')
         res_file = os.path.join(Config.result_dir, args.type, 'txt', vname + '.txt')
         result = list()
 

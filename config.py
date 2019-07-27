@@ -1,13 +1,13 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 17:34:56
-@LastEditTime: 2019-07-23 16:06:52
+@LastEditTime: 2019-07-26 16:52:44
 @Description: 
 '''
 
 
 class Config:
-    data_root = '../dataset/MOT17'
+    data_root = '../dataset/CAR'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
@@ -38,6 +38,6 @@ class TrainConfig(Config):
 
 
 class EvalConfig(Config):
-    model_path = 'checkpoints/sst900_3_199.pth'
+    model_path = 'checkpoints/sst900_0_19.pth'
     result_dir = 'result'
     max_track_frame = 10
