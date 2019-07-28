@@ -1,7 +1,7 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-16 17:30:38
-@LastEditTime: 2019-07-25 21:06:53
+@LastEditTime: 2019-07-28 13:30:55
 @Description: 
 '''
 
@@ -59,7 +59,7 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
         if det_num > Config.max_object:
-            index = torch.argsort(torch.from_numpy(detection), descending=False, dim=0)[:, 6]
+            index = torch.argsort(detection, descending=False, dim=0)[:, 6]
             detection = detection[index[:Config.max_object], :]
         else:
             detection = F.pad(detection, [0, 0, 0, Config.max_object - detection.shape[0]], value=-1)

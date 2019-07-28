@@ -1,13 +1,13 @@
 '''
 @Author: rayenwang
 @Date: 2019-07-17 17:34:56
-@LastEditTime: 2019-07-26 16:52:44
+@LastEditTime: 2019-07-27 12:08:48
 @Description: 
 '''
 
 
 class Config:
-    data_root = '../dataset/CAR'
+    data_root = '../dataset/MOT17'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
