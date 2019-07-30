@@ -59,14 +59,4 @@ class SSTLoss(object):
         loss_sim = (target_union * torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
 
         loss = (loss_pre + loss_next + loss_union + loss_sim) / 4.0
-
-        # accuracy
-        _, target_pre_index = target_pre.max(dim=3)
-        _, predict_pre_index = predict_pre.max(dim=3)
-        accuracy_pre = (target_pre_index == predict_pre_index).sum() / target_pre_num
-        _, target_next_index = target_next.max(dim=2)
-        _, predict_next_index = predict_next.max(dim=2)
-        accuracy_next = (target_next_index == predict_next_index).sum() / target_next_num
-        accuracy = (accuracy_pre + accuracy_next) / 2
-
-        return loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy
+        return loss_pre, loss_next, loss_union, loss_sim, loss

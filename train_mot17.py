@@ -86,8 +86,7 @@ def train():
             # forward
             out = net(img_pre, img_next, boxes_pre, boxes_next)
 
-            loss_pre, loss_next, loss_union, loss_sim, loss, accuracy_pre, accuracy_next, accuracy = \
-                criterion(out, labels, valid_pre, valid_next)
+            loss_pre, loss_next, loss_union, loss_sim, loss = criterion(out, labels, valid_pre, valid_next)
 
             optimizer.zero_grad()
             loss.backward()
@@ -97,17 +96,12 @@ def train():
                 print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
                 print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
                       .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
-                print('accuracy: {:.4f} || accuracy_pre: {:.4f} || accuracy_next: {:.4f}'
-                      .format(accuracy.item(), accuracy_pre.item(), accuracy_next.item()))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)
                 writer.add_scalar('loss/loss_pre', loss_pre.item(), log_index)
                 writer.add_scalar('loss/loss_next', loss_next.item(), log_index)
                 writer.add_scalar('loss/loss_sim', loss_sim.item(), log_index)
-                writer.add_scalar('accuracy/accuracy', accuracy.item(), log_index)
-                writer.add_scalar('accuracy/accuracy_pre', accuracy_pre.item(), log_index)
-                writer.add_scalar('accuracy/accuracy_next', accuracy_next.item(), log_index)
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)
                 ckpt_dict = {'state_dict': net.module.state_dict(), 'optimizer': optimizer.state_dict(), 'epoch': epoch}
