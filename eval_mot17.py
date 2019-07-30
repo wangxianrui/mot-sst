@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 21:30:13
-@LastEditTime: 2019-07-26 14:29:36
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 import argparse
 from tqdm import tqdm

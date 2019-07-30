@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-16 17:30:38
-@LastEditTime: 2019-07-28 13:30:55
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 import pandas as pd
 import cv2

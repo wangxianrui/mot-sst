@@ -1,11 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:30
-@LastEditTime: 2019-07-23 14:44:36
-@Description: 
-'''
-
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import torch
 import cv2
 import numpy as np
@@ -256,9 +255,9 @@ class ResizeShuffleBoxes(object):
         mask_next = indexes_next < size_next
 
         # find unmatched object
-        false_object_pre = (labels.sum(0) == 0).astype(np.float32)
+        false_object_pre = (labels.sum(1) == 0).astype(np.float32)
         false_object_pre[np.logical_not(mask_pre)] = 0.0
-        false_object_next = (labels.sum(1) == 0).astype(np.float32)
+        false_object_next = (labels.sum(0) == 0).astype(np.float32)
         false_object_next[np.logical_not(mask_next)] = 0.0
 
         # concate to N+1 * N+1
@@ -268,8 +267,8 @@ class ResizeShuffleBoxes(object):
         false_object_next = np.expand_dims(false_object_next, axis=0)
         labels = np.concatenate((labels, false_object_next), axis=0)
 
-        mask_pre = np.append(mask_pre, [True])  # 61
-        mask_next = np.append(mask_next, [True])  # 61
+        mask_pre = np.append(mask_pre, [True])
+        mask_next = np.append(mask_next, [True])
         return img_pre, img_next, [boxes_pre, mask_pre], [boxes_next, mask_next], labels
 
 

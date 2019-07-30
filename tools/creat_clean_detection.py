@@ -1,11 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:41
-@LastEditTime: 2019-07-23 14:44:25
-@Description: 
-'''
-
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 import numpy as np
 from config import Config

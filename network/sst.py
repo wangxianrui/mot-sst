@@ -1,19 +1,19 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-19 17:49:39
-@LastEditTime: 2019-07-26 10:02:27
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from config import Config
 
 
-class VGG(nn.Module):
+class BaseLine(nn.Module):
     def __init__(self, in_channels=3):
-        super(VGG, self).__init__()
+        super(BaseLine, self).__init__()
         self.in_channels = in_channels
         self.cfg = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'C', 512, 512, 512, 'M', 512, 512, 512]
         self.layers = nn.Sequential(*self.build())
@@ -132,7 +132,7 @@ class Final(nn.Module):
 class SST(nn.Module):
     def __init__(self):
         super(SST, self).__init__()
-        self.base = VGG()
+        self.base = BaseLine()
         self.extractor = Extractor()
         self.selector = Selector()
         self.final = Final()
@@ -205,4 +205,6 @@ def build_sst(size=900):
     if size != 900:
         print('Error: Sorry only SST 900 is supported currently!')
         return
+    # from . import sst_custom
+    # return sst_custom.SST()
     return SST()

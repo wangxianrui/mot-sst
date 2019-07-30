@@ -1,9 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-17 17:34:56
-@LastEditTime: 2019-07-27 12:08:48
-@Description: 
-'''
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 
 
 class Config:
@@ -21,16 +22,21 @@ class Config:
 
 class TrainConfig(Config):
     backbone = 'pretrained/vgg16_reducedfc.pth'
+    # backbone = 'pretrained/resnet50_reducedfc.pth'
     from_training = ''
     batch_size = 1
     num_workers = 8
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 10
-    lr_init = 1e-2
-    lr_decay = 0.1
-    lr_epoch = [20, 30, 35, 38]
-    max_epoch = 40
+    lr_init = 1e-3
+    lr_map = {
+        '1': 1e-2,
+        '10': 1e-3,
+        '15': 1e-4,
+        '18': 1e-5,
+    }
+    max_epoch = 20
     momentum = 0.9
     weight_decay = 5e-4
     log_setp = 50

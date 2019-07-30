@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-26 16:33:55
-@Description: 
-    format labeled image to MOT type
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 import shutil
 import numpy as np

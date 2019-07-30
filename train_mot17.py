@@ -1,12 +1,11 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:42
-@LastEditTime: 2019-07-23 14:43:00
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
-import time
 from tqdm import tqdm
 import torch
 import torch.utils.data
@@ -19,9 +18,9 @@ from network.sst_loss import SSTLoss
 from pipline.mot_train_dataset import MOTTrainDataset, collate_fn
 
 
-def adjust_lr(optimizer):
+def adjust_lr(epoch, optimizer):
     for param in optimizer.param_groups:
-        param['lr'] *= Config.lr_decay
+        param['lr'] = Config.lr_map[str(epoch)]
 
 
 def train():
@@ -67,8 +66,8 @@ def train():
     net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):
-        if epoch in Config.lr_epoch:
-            adjust_lr(optimizer)
+        if str(epoch) in Config.lr_map.keys():
+            adjust_lr(epoch, optimizer)
 
         for index, iter_data in enumerate(tqdm(dataloader)):
             img_pre, img_next, boxes_pre, boxes_next, labels, valid_pre, valid_next = iter_data
@@ -95,7 +94,10 @@ def train():
 
             if (index + 1) % Config.log_setp == 0:
                 print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
-                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'.format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
+                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
+                      .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
+                print('accuracy: {:.4f} || accuracy_pre: {:.4f} || accuracy_next: {:.4f}'
+                      .format(accuracy.item(), accuracy_pre.item(), accuracy_next.item()))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)

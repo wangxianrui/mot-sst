@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:42
-@LastEditTime: 2019-07-23 14:43:47
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 import pandas as pd
 from config import TrainConfig as Config

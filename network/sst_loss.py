@@ -1,23 +1,22 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:29
-@LastEditTime: 2019-07-23 14:45:12
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import torch
 import torch.nn.functional as F
 from config import Config
 
 
-class SSTLoss(torch.nn.Module):
+class SSTLoss(object):
     def __init__(self):
         super(SSTLoss, self).__init__()
         self.max_object = Config.max_object
 
-    def forward(self, predict, target, mask0, mask1):
+    def __call__(self, predict, target, mask0, mask1):
         """
-
         :param predict: b, 1, N+1, N+1
         :param target: b, 1, N+1, N+1
         :param mask0: pre_mask b, 1, N+1

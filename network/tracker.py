@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-17 14:58:49
-@LastEditTime: 2019-07-28 13:32:01
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import torch
 import numpy as np
 from scipy.optimize import linear_sum_assignment

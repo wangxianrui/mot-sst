@@ -1,10 +1,10 @@
-'''
-@Author: rayenwang
-@Date: 2019-07-22 20:51:41
-@LastEditTime: 2019-07-23 14:43:54
-@Description: 
-'''
-
+# -*- coding:utf-8 -*-
+"""
+@authors: rayenwang
+@time: ${DATE} ${TIME}
+@file: ${NAME}.py
+@description:
+"""
 import os
 from config import Config
 
