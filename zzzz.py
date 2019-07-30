@@ -9,6 +9,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torchvision.models as models
+import cv2
+import os
 
 # x1 = torch.rand(45, 512, requires_grad=True)
 # x2 = torch.rand(45, 512, requires_grad=True).transpose(1, 0)
@@ -22,8 +24,5 @@ import torchvision.models as models
 # res = torch.sum(similarity)
 # res.backward()
 
-
-x1 = torch.rand(8, 45, 512)
-x2 = torch.rand(8, 45, 512).permute(0, 2, 1)
-y = torch.matmul(x1, x2)
-print(y.shape)
+data = torch.rand(4, 3, 2)
+index = torch.randint()

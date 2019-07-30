@@ -34,7 +34,8 @@ def train():
     # prepare dataset
     print('loading dataset...')
     dataset = MOTTrainDataset()
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True, num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True,
+                                             num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
 
     # create model
     net = torch.nn.DataParallel(build_sst())
@@ -55,7 +56,7 @@ def train():
             pretrained = torch.load(Config.from_training, map_location='cpu')
         net.module.load_state_dict(pretrained['state_dict'])
         optimizer.load_state_dict(pretrained['optimizer'])
-        start_epoch = pretrained['epoch'] + 1
+        start_epoch = pretrained['epoch']
     else:
         print('load backbone from {}'.format(Config.backbone))
         if Config.use_cuda:

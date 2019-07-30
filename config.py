@@ -8,16 +8,16 @@
 
 
 class Config:
-    data_root = '../dataset/MOT17'
+    data_root = '../dataset/CAR'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 45
+    max_object = 5
     image_size = (sst_dim, sst_dim)
     false_constant = 1
-    detector = 'FRCNN'  # DPM, SDP, FRCNN
+    detector = ''  # DPM, SDP, FRCNN
 
 
 class TrainConfig(Config):
@@ -25,7 +25,7 @@ class TrainConfig(Config):
     # backbone = 'pretrained/resnet50_reducedfc.pth'
     from_training = ''
     batch_size = 1
-    num_workers = 8
+    num_workers = 1
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 10
