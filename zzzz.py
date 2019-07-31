@@ -24,5 +24,6 @@ import os
 # res = torch.sum(similarity)
 # res.backward()
 
-data = torch.rand(4, 3, 2)
-index = torch.randint()
+a = torch.rand(4, 3)
+b = torch.rand(4, 3)
+print(torch.max(a, b))

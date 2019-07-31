@@ -39,7 +39,7 @@ class TrainConfig(Config):
     max_epoch = 20
     momentum = 0.9
     weight_decay = 5e-4
-    log_setp = 50
+    log_setp = 1
     save_step = 200
 
 
