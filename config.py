@@ -8,13 +8,13 @@
 
 
 class Config:
-    data_root = '../dataset/CAR'
+    data_root = '../dataset/CAR_tracking'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 5
+    max_object = 8
     image_size = (sst_dim, sst_dim)
     false_constant = 1
     detector = ''  # DPM, SDP, FRCNN
@@ -29,21 +29,20 @@ class TrainConfig(Config):
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 10
-    lr_init = 1e-3
+    lr_init = 1e-2
     lr_map = {
-        '1': 1e-2,
-        '10': 1e-3,
-        '15': 1e-4,
-        '18': 1e-5,
+        '1': 1e-3,
+        '5': 1e-4,
+        '7': 1e-5,
     }
-    max_epoch = 20
+    max_epoch = 8
     momentum = 0.9
-    weight_decay = 5e-4
-    log_setp = 1
+    weight_decay = 1e-5
+    log_setp = 50
     save_step = 200
 
 
 class EvalConfig(Config):
-    model_path = 'checkpoints/sst900_0_19.pth'
+    model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result'
-    max_track_frame = 10
+    max_track_frame = 5

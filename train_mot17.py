@@ -58,12 +58,19 @@ def train():
         optimizer.load_state_dict(pretrained['optimizer'])
         start_epoch = pretrained['epoch']
     else:
-        print('load backbone from {}'.format(Config.backbone))
+        print('load pretrained from pretrained/sst900_mot.pth')
         if Config.use_cuda:
-            backbone = torch.load(Config.backbone)
+            pretrained = torch.load('pretrained/sst900_mot.pth')
         else:
-            backbone = torch.load(Config.backbone, map_location='cpu')
-        net.module.base.layers.load_state_dict(backbone)
+            pretrained = torch.load('pretrained/sst900_mot.pth', map_location='cpu')
+        net.module.load_state_dict(pretrained['state_dict'])
+        optimizer.load_state_dict(pretrained['optimizer'])
+        # print('load backbone from {}'.format(Config.backbone))
+        # if Config.use_cuda:
+        #     backbone = torch.load(Config.backbone)
+        # else:
+        #     backbone = torch.load(Config.backbone, map_location='cpu')
+        # net.module.base.layers.load_state_dict(backbone)
     net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):
@@ -72,6 +79,8 @@ def train():
 
         for index, iter_data in enumerate(tqdm(dataloader)):
             img_pre, img_next, boxes_pre, boxes_next, labels, valid_pre, valid_next = iter_data
+            if torch.sum(labels[:, :, :-1, :-1]) == 0:
+                continue
 
             if Config.use_cuda:
                 img_pre = img_pre.cuda()

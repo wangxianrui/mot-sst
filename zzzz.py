@@ -11,6 +11,7 @@ import numpy as np
 import torchvision.models as models
 import cv2
 import os
+import shutil
 
 # x1 = torch.rand(45, 512, requires_grad=True)
 # x2 = torch.rand(45, 512, requires_grad=True).transpose(1, 0)
@@ -24,6 +25,9 @@ import os
 # res = torch.sum(similarity)
 # res.backward()
 
-a = torch.rand(4, 3)
-b = torch.rand(4, 3)
-print(torch.max(a, b))
+data_dir = '../dataset/CAR_tracking'
+index = 1
+for name in os.listdir(data_dir):
+    print(os.path.join(data_dir, 'sequence_{0:03}'.format(index)))
+    shutil.move(os.path.join(data_dir, name), os.path.join(data_dir, 'sequence_{0:03}'.format(index)))
+    index += 1

@@ -7,7 +7,6 @@
 """
 import os
 import shutil
-import numpy as np
 from config import Config
 
 gt_dir = Config.data_root
@@ -43,7 +42,7 @@ for video_name in video_list:
             with open(os.path.join(rec_dir, rec_name)) as in_file:
                 data = in_file.read().splitlines()
                 for line in data:
-                    line = [int(n) for n in line.split(' ')]
+                    line = [int(n) for n in line.split()]
                     line[3] -= line[1]
                     line[4] -= line[2]
                     frame_info.append(str([frame_index] + line[:-1] + [1, 1, 1])[1:-1] + '\n')
