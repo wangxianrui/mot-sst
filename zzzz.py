@@ -25,9 +25,5 @@ import shutil
 # res = torch.sum(similarity)
 # res.backward()
 
-data_dir = '../dataset/CAR_tracking'
-index = 1
-for name in os.listdir(data_dir):
-    print(os.path.join(data_dir, 'sequence_{0:03}'.format(index)))
-    shutil.move(os.path.join(data_dir, name), os.path.join(data_dir, 'sequence_{0:03}'.format(index)))
-    index += 1
+tracks = list()
+tracks.copy()

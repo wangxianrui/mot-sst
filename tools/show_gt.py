@@ -72,7 +72,7 @@ def main(args):
                 bb_y2 = int(res_raw[row_ind[i], 3] + res_raw[row_ind[i], 5])
                 color_ind = id % len(colorList)
                 cv2.rectangle(overlay, (bb_x1, bb_y1), (bb_x2, bb_y2), colorList[color_ind], 3)
-                cv2.putText(overlay, str(id), (bb_x1, bb_y1), cv2.FONT_HERSHEY_SIMPLEX, 1, colorList[color_ind], 1)
+                cv2.putText(overlay, str(id), (bb_x1 + 10, bb_y1 + 10), cv2.FONT_HERSHEY_SIMPLEX, 1, colorList[color_ind], 3)
             vwriter.write(overlay)
 
 

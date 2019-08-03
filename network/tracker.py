@@ -142,7 +142,7 @@ class Track:
             feture_similarity = recorder.all_similarity[frame_index][f][id, :][torch.cat([valid_index, torch.tensor([-1]).to(valid_index.device)])]
             similarity += [feture_similarity]
         similarity = torch.stack(similarity, dim=0)
-        similarity = torch.topk(similarity, math.ceil(similarity.shape[0] / 2), dim=0)[0]
+        # similarity = torch.topk(similarity, math.ceil(similarity.shape[0] / 2), dim=0)[0]
         return torch.mean(similarity, dim=0)
 
 
@@ -214,8 +214,8 @@ class SSTTracker:
             # update tracks
             for i in range(track_num):
                 track = self.tracks[i]
-                det_index = valid_index[col_index[i]]
-                if det_index != -1:
+                if col_index[i] != -1:
+                    det_index = valid_index[col_index[i]]
                     node = Node(frame_index, det_index)
                     track.add_node(frame_index, self.recorder, node)
             # add new tracks
