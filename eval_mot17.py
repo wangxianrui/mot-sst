@@ -63,6 +63,17 @@ def eval(args):
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
             img, det, index, h, w = next(dataset_iter)
+            # ## test
+            # import cv2
+            # if img is not None:
+            #     image = img.permute(1, 2, 0).clone().numpy()
+            #     for d in det[index].clone().numpy():
+            #         x, y, w, h = d * 900
+            #         cv2.rectangle(image, (int(x), int(y)), (int(x + w), int(y + h)), (0, 0, 255), 3)
+            #     cv2.imshow('win', image)
+            #     cv2.waitKey()
+            # continue
+            # ##
             if det is None:
                 tracker.one_frame_pass()
                 continue

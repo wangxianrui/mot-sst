@@ -98,13 +98,10 @@ class Node:
 
 
 class Track:
-    _id_pool = 0
-
-    def __init__(self):
+    def __init__(self, track_id):
         self.nodes = list()
-        self.id = Track._id_pool
+        self.id = track_id
         self.age = 0
-        Track._id_pool += 1
 
     def add_node(self, frame_index, recorder, node):
         if len(self.nodes) > 0:
@@ -149,6 +146,7 @@ class Track:
 class SSTTracker:
     def __init__(self):
         self.sst = build_sst()
+        self.id_pool = 0
         self.tracks = list()
         self.recorder = FeatureRecorder()
         self.load_model()
@@ -198,7 +196,8 @@ class SSTTracker:
         # first frame
         if frame_index == 0 or track_num == 0:
             for index in valid_index:
-                track = Track()
+                track = Track(self.id_pool)
+                self.id_pool += 1
                 node = Node(frame_index, index)
                 track.add_node(frame_index, self.recorder, node)
                 self.add_track(track)
@@ -222,7 +221,8 @@ class SSTTracker:
             for j in range(det_num):
                 if j not in col_index:
                     node = Node(frame_index, valid_index[j])
-                    track = Track()
+                    track = Track(self.id_pool)
+                    self.id_pool += 1
                     track.add_node(frame_index, self.recorder, node)
                     self.add_track(track)
         self.one_frame_pass()

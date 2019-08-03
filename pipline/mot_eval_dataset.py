@@ -26,7 +26,7 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         self.detection_group_keys = list(self.detection_group.indices.keys())
 
     def __len__(self):
-        return len(self.detection_group_keys)
+        return len(os.listdir(self.image_folder))
 
     def get_detection_by_index(self, index):
         if self.detection_group_keys.count(index) == 0:

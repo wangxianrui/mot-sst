@@ -8,7 +8,7 @@
 
 
 class Config:
-    data_root = '../dataset/CAR_tracking'
+    data_root = '../dataset/CAR'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
