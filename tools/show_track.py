@@ -28,7 +28,7 @@ def main(args):
         img_dir = os.path.join(Config.data_root, args.type, txt_name[:-4], 'img1')
         temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
-        vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (w, h))
+        vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 25, (w, h))
 
         res_raw = pd.read_csv(txt_file, sep=',', header=None)
         res_raw = np.array(res_raw).astype(np.float32)

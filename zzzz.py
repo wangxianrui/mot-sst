@@ -12,6 +12,7 @@ import torchvision.models as models
 import cv2
 import os
 import shutil
+from scipy.optimize import linear_sum_assignment
 
 # x1 = torch.rand(45, 512, requires_grad=True)
 # x2 = torch.rand(45, 512, requires_grad=True).transpose(1, 0)
@@ -25,5 +26,14 @@ import shutil
 # res = torch.sum(similarity)
 # res.backward()
 
-tracks = list()
-tracks.copy()
+# data = np.random.randn(5)
+# print(data)
+# mask = data > 0
+# print(mask)
+# print(data[mask])
+
+
+cost = np.random.rand(4, 8)
+print(cost)
+row, col = linear_sum_assignment(cost)
+print(col)

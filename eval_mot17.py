@@ -59,7 +59,7 @@ def eval(args):
 
         print('start processing {}'.format(res_file))
         tracker = SSTTracker()
-        dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file, min_confidence=0.0)
+        dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
             img, det, index, h, w = next(dataset_iter)
@@ -68,7 +68,7 @@ def eval(args):
             # if img is not None:
             #     image = img.permute(1, 2, 0).clone().numpy()
             #     for d in det[index].clone().numpy():
-            #         x, y, w, h = d * 900
+            #         x, y, w, h, _ = d * 900
             #         cv2.rectangle(image, (int(x), int(y)), (int(x + w), int(y + h)), (0, 0, 255), 3)
             #     cv2.imshow('win', image)
             #     cv2.waitKey()

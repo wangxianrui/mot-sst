@@ -15,13 +15,12 @@ from config import EvalConfig as Config
 
 
 class MOTEvalDataset(torch.utils.data.Dataset):
-    def __init__(self, image_folder, detection_file_name, min_confidence=None):
+    def __init__(self, image_folder, detection_file_name):
         self.image_folder = image_folder
         self.detection_file_name = detection_file_name
         self.image_format = os.path.join(self.image_folder, '{0:06d}.jpg')
         self.detection = pd.read_csv(self.detection_file_name, header=None)
-        if min_confidence is not None:
-            self.detection = self.detection[self.detection[6] > min_confidence]
+        self.detection = self.detection[self.detection[6] > Config.low_confidence]
         self.detection_group = self.detection.groupby(0)
         self.detection_group_keys = list(self.detection_group.indices.keys())
 
@@ -63,7 +62,8 @@ class MOTEvalDataset(torch.utils.data.Dataset):
             detection = detection[index[:Config.max_object], :]
         else:
             detection = F.pad(detection, [0, 0, 0, Config.max_object - detection.shape[0]], value=-1)
-        detection = detection[:, 2:6]
+        # x, y, w, h, confidence
+        detection = detection[:, 2:7]
 
         # shuffle
         index = np.arange(Config.max_object)

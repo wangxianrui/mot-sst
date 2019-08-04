@@ -184,10 +184,12 @@ class SSTTracker:
         @Description: 
         @Parameter: 
             image: 3 * dim * dim
-            detection: maxN * 4
+            detection: maxN * 5, x,y,w,h,confidence
             valid_index: maxN + 1
         @Return: 
         '''
+        confidence = detection[:, -1]
+        detection = detection[:, :-1]
         features = self.sst.forward_feature(image.unsqueeze(0), self.convert_detection(detection.clone()))
         self.recorder.update(self.sst, frame_index, features, detection, valid_index)
         track_num = len(self.tracks)
@@ -196,11 +198,13 @@ class SSTTracker:
         # first frame
         if frame_index == 0 or track_num == 0:
             for index in valid_index:
-                track = Track(self.id_pool)
-                self.id_pool += 1
-                node = Node(frame_index, index)
-                track.add_node(frame_index, self.recorder, node)
-                self.add_track(track)
+                # add new track
+                if confidence[index] > Config.high_confidence:
+                    track = Track(self.id_pool)
+                    self.id_pool += 1
+                    node = Node(frame_index, index)
+                    track.add_node(frame_index, self.recorder, node)
+                    self.add_track(track)
         else:
             # similarity between track and detection    track_num * det_num + 1
             similarity = self.get_similarity(frame_index, self.recorder, valid_index)
@@ -220,11 +224,14 @@ class SSTTracker:
             # add new tracks
             for j in range(det_num):
                 if j not in col_index:
-                    node = Node(frame_index, valid_index[j])
-                    track = Track(self.id_pool)
-                    self.id_pool += 1
-                    track.add_node(frame_index, self.recorder, node)
-                    self.add_track(track)
+                    index = valid_index[j]
+                    # add new track
+                    if confidence[index] > Config.high_confidence:
+                        track = Track(self.id_pool)
+                        self.id_pool += 1
+                        node = Node(frame_index, index)
+                        track.add_node(frame_index, self.recorder, node)
+                        self.add_track(track)
         self.one_frame_pass()
 
     def convert_detection(self, detection):
