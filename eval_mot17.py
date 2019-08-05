@@ -62,7 +62,7 @@ def eval(args):
         dataset = MOTEvalDataset(image_folder=img_dir, detection_file_name=det_file)
         dataset_iter = iter(dataset)
         for i in tqdm(range(len(dataset))):
-            img, det, index, h, w = next(dataset_iter)
+            img, det, mask, h, w = next(dataset_iter)
             # ## test
             # import cv2
             # if img is not None:
@@ -80,10 +80,10 @@ def eval(args):
             if Config.use_cuda:
                 img = img.cuda()
                 det = det.cuda()
-                index = index.cuda()
+                mask = mask.cuda()
 
             timer.tic()
-            tracker.update(img, det, index, i)
+            tracker.update(img, det, mask, i)
             timer.toc()
 
             # save result

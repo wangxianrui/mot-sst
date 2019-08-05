@@ -169,7 +169,7 @@ class SSTTracker:
             if track.age < Config.max_track_frame:
                 self.add_track(track)
 
-    def update(self, image, detection, valid_index, frame_index):
+    def update(self, image, detection, valid_mask, frame_index):
         '''
         @Description: 
         @Parameter: 
@@ -178,6 +178,7 @@ class SSTTracker:
             valid_index: maxN + 1
         @Return: 
         '''
+        valid_index = torch.nonzero(valid_mask).squeeze(dim=1)
         confidence = detection[:, -1]
         detection = detection[:, :-1]
         features = self.sst.forward_feature(image.unsqueeze(0), self.convert_detection(detection.clone()))

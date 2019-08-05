@@ -70,5 +70,4 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         np.random.shuffle(index)
         detection = detection[index, :]
         valid_mask = torch.from_numpy(index < det_num).float()
-        valid_index = torch.nonzero(valid_mask).squeeze(dim=1)
-        return image, detection, valid_index, h, w
+        return image, detection, valid_mask, h, w
