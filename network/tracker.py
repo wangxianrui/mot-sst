@@ -104,30 +104,15 @@ class Track:
         self.age = 0
 
     def add_node(self, frame_index, recorder, node):
-        if len(self.nodes) > 0:
-            n = self.nodes[-1]
-            iou = n.get_iou(frame_index, recorder, node.det_index)
-            delta_frame = frame_index - n.frame_index
-            # filter out with low iou
-            if iou < 0.5 ** delta_frame:
-                return
+        # if len(self.nodes) > 0:
+        #     n = self.nodes[-1]
+        #     iou = n.get_iou(frame_index, recorder, node.det_index)
+        #     delta_frame = frame_index - n.frame_index
+        #     # filter out with low iou
+        #     if iou < 0.5 ** delta_frame:
+        #         return
         self.nodes.append(node)
         self.age = 0
-
-    """
-    def get_similarity(self, frame_index, recorder, valid_index):
-        similarity = []
-        for n in self.nodes:
-            f = n.frame_index
-            id = n.det_index
-            if frame_index - f >= Config.max_track_frame:
-                continue
-            similarity += [recorder.all_similarity[frame_index][f][id, :][torch.cat([valid_index, torch.tensor([-1]).to(valid_index.device)])]]
-        feature_similarity = torch.max(torch.stack(similarity, dim=0), dim=0)[0]
-        f = self.nodes[-1].frame_index
-        id = self.nodes[-1].det_index
-        return (feature_similarity + motion_similarity) / 2
-    """
 
     def get_similarity(self, frame_index, recorder, valid_index):
         similarity = []
@@ -139,8 +124,13 @@ class Track:
             feture_similarity = recorder.all_similarity[frame_index][f][id, :][torch.cat([valid_index, torch.tensor([-1]).to(valid_index.device)])]
             similarity += [feture_similarity]
         similarity = torch.stack(similarity, dim=0)
-        # similarity = torch.topk(similarity, math.ceil(similarity.shape[0] / 2), dim=0)[0]
-        return torch.mean(similarity, dim=0)
+        similarity = torch.mean(similarity, dim=0)
+        # iou filter
+        f = self.nodes[-1].frame_index
+        id = self.nodes[-1].det_index
+        iou_similarity = recorder.all_iou[frame_index][f][id, :][valid_index]
+        similarity[:-1][iou_similarity < Config.iou_threshold ** (frame_index - f)] = 0
+        return similarity
 
 
 class SSTTracker:

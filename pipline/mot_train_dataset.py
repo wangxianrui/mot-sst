@@ -152,7 +152,6 @@ class GTSingleParser:
                     gap_frame = random.choice(choice_gap)
                     temp_frame_index = next_frame_index + gap_frame
                 next_frame_index = temp_frame_index
-
         # 3. get next image
         next_image = self._getimage(next_frame_index)
 

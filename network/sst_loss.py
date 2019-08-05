@@ -33,10 +33,11 @@ class SSTLoss(object):
         mask_union = mask[:, :, :-1, :-1].clone()
 
         predict_pre = predict[:, :, :-1, :].clone()
-        predict_pre = torch.nn.Softmax(dim=3)(mask_pre * predict_pre)
+        predict_pre = torch.nn.Softmax(dim=3)(predict_pre)
         predict_next = predict[:, :, :, :-1].clone()
-        predict_next = torch.nn.Softmax(dim=2)(mask_next * predict_next)
-        predict_union = torch.max(predict_pre[:, :, :, :-1], predict_next[:, :, :-1, :])
+        predict_next = torch.nn.Softmax(dim=2)(predict_next)
+        # predict_union = torch.max(predict_pre[:, :, :, :-1], predict_next[:, :, :-1, :])
+        predict_union = (predict_pre[:, :, :, :-1] + predict_next[:, :, :-1, :]) / 2
 
         target_pre = mask_pre * target[:, :, :-1, :]
         target_next = mask_next * target[:, :, :, :-1]

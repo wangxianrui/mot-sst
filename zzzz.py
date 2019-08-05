@@ -31,9 +31,3 @@ from scipy.optimize import linear_sum_assignment
 # mask = data > 0
 # print(mask)
 # print(data[mask])
-
-
-cost = np.random.rand(4, 8)
-print(cost)
-row, col = linear_sum_assignment(cost)
-print(col)

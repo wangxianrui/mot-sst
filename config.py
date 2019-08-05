@@ -28,7 +28,7 @@ class TrainConfig(Config):
     num_workers = 1
     min_visibility = 0.3
     min_gap_frame = 0
-    max_gap_frame = 15
+    max_gap_frame = 10
     lr_init = 1e-2
     lr_map = {
         '1': 1e-3,
@@ -45,8 +45,10 @@ class TrainConfig(Config):
 class EvalConfig(Config):
     model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result'
-    max_track_frame = 15
+    max_track_frame = 5
     # filter out
     low_confidence = 0.3
     # add to track
     high_confidence = 0.8
+    # iou
+    iou_threshold = 0.4

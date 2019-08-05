@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from config import TrainConfig as Config
 from network.sst import build_sst
 from network.sst_loss import SSTLoss
-from pipline.mot_train_dataset import MOTTrainDataset, collate_fn
+from pipline.mot_train_dataset_ import MOTTrainDataset, collate_fn
 
 
 def adjust_lr(epoch, optimizer):
@@ -64,7 +64,6 @@ def train():
         else:
             pretrained = torch.load('pretrained/sst900_mot.pth', map_location='cpu')
         net.module.load_state_dict(pretrained['state_dict'])
-        optimizer.load_state_dict(pretrained['optimizer'])
         # print('load backbone from {}'.format(Config.backbone))
         # if Config.use_cuda:
         #     backbone = torch.load(Config.backbone)
@@ -81,6 +80,19 @@ def train():
             img_pre, img_next, boxes_pre, boxes_next, labels, valid_pre, valid_next = iter_data
             if torch.sum(labels[:, :, :-1, :-1]) == 0:
                 continue
+
+            # ## test
+            # import cv2
+            # import numpy as np
+            # image1 = img_pre[0].permute(1, 2, 0).clone().numpy()
+            # image1 = (image1 * 127.5) + 127.5
+            # image2 = img_next[0].permute(1, 2, 0).clone().numpy()
+            # image2 = (image2 * 127.5) + 127.5
+            # cv2.imshow('img1', image1.astype(np.uint8))
+            # cv2.imshow('img2', image2.astype(np.uint8))
+            # cv2.waitKey()
+            # continue
+            # ##
 
             if Config.use_cuda:
                 img_pre = img_pre.cuda()
