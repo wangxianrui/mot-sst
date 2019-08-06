@@ -32,9 +32,3 @@ from scipy.optimize import linear_sum_assignment
 # mask = data > 0
 # print(mask)
 # print(data[mask])
-
-mask = torch.randint(0, 2, (5,)).float()
-print(mask)
-data = torch.arange(5).float()
-print(data * mask)
-print(data[mask.to(torch.uint8)])

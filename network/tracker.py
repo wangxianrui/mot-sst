@@ -29,16 +29,16 @@ class FeatureRecorder:
         self.all_frame_index = []
         self.all_features = {}
         self.all_boxes = {}
-        self.all_index = {}
+        self.all_mask = {}
         self.all_similarity = {}
         self.all_iou = {}
 
-    def update(self, sst, frame_index, features, boxes, valid_index):
+    def update(self, sst, frame_index, features, boxes, valid_mask):
         if len(self.all_frame_index) == Config.max_track_frame:
             del_frame = self.all_frame_index[0]
             del self.all_features[del_frame]
             del self.all_boxes[del_frame]
-            del self.all_index[del_frame]
+            del self.all_mask[del_frame]
             del self.all_similarity[del_frame]
             del self.all_iou[del_frame]
             del self.all_frame_index[0]
@@ -46,11 +46,12 @@ class FeatureRecorder:
         self.all_frame_index.append(frame_index)
         self.all_features[frame_index] = features
         self.all_boxes[frame_index] = boxes
-        self.all_index[frame_index] = valid_index
+        self.all_mask[frame_index] = valid_mask
 
         self.all_similarity[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
-            pre_similarity = sst.get_similarity(self.all_features[pre_index].clone(), features.clone())
+            pre_similarity = sst.get_similarity(self.all_features[pre_index].clone(), self.all_mask[pre_index].clone(),
+                                                features.clone(), valid_mask.clone())
             self.all_similarity[frame_index][pre_index] = pre_similarity
 
         self.all_iou[frame_index] = {}
@@ -121,7 +122,8 @@ class Track:
             id = n.det_index
             if frame_index - f >= Config.max_track_frame:
                 continue
-            feture_similarity = recorder.all_similarity[frame_index][f][id, :][torch.cat([valid_index, torch.tensor([-1]).to(valid_index.device)])]
+            feature_index = torch.cat([valid_index, torch.tensor([-1]).to(valid_index.device)])
+            feture_similarity = recorder.all_similarity[frame_index][f][id, :][feature_index]
             similarity += [feture_similarity]
         similarity = torch.stack(similarity, dim=0)
         similarity = torch.mean(similarity, dim=0)
@@ -182,7 +184,7 @@ class SSTTracker:
         confidence = detection[:, -1]
         detection = detection[:, :-1]
         features = self.sst.forward_feature(image.unsqueeze(0), self.convert_detection(detection.clone()))
-        self.recorder.update(self.sst, frame_index, features, detection, valid_index)
+        self.recorder.update(self.sst, frame_index, features, detection, valid_mask)
         track_num = len(self.tracks)
         det_num = valid_index.shape[0]
 

@@ -233,12 +233,17 @@ class RandomHue(object):
 
 class ResizeShuffleBoxes(object):
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
-        resize_f = lambda boxes: (
-            boxes.shape[0],
-            np.vstack((boxes, np.full((Config.max_object - len(boxes), boxes.shape[1]), np.inf))))
-        # show the shuffling result
-        size_pre, boxes_pre = resize_f(boxes_pre)
-        size_next, boxes_next = resize_f(boxes_next)
+        # resize_f = lambda boxes: (
+        #     boxes.shape[0],
+        #     np.vstack((boxes, np.full((Config.max_object - len(boxes), boxes.shape[1]), np.inf))))
+        # size_pre, boxes_pre = resize_f(boxes_pre)
+        # size_next, boxes_next = resize_f(boxes_next)
+
+        # repeat bbox for BN
+        size_pre = boxes_pre.shape[0]
+        boxes_pre = np.pad(boxes_pre, [(0, Config.max_object - size_pre), (0, 0)], mode='reflect')
+        size_next = boxes_next.shape[0]
+        boxes_next = np.pad(boxes_next, [(0, Config.max_object - size_next), (0, 0)], mode='reflect')
 
         indexes_pre = np.arange(Config.max_object)
         indexes_next = np.arange(Config.max_object)

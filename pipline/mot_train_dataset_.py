@@ -21,11 +21,12 @@ class MOTTrainDataset(data.Dataset):
     def __init__(self):
         super(MOTTrainDataset, self).__init__()
         self.transform = SSTTrainAugment(Config.sst_dim, Config.mean_pixel)
-        self.video_list = os.listdir(os.path.join(Config.data_root, 'train'))
+        self.video_list = [name for name in os.listdir(os.path.join(Config.data_root, 'train')) if Config.detector in name]
         self.video_len = [len(os.listdir(os.path.join(Config.data_root, 'train', name, 'img1')))
                           for name in self.video_list]
 
     def __getitem__(self, item):
+        # video index and frame index
         video_index = 0
         while item >= self.video_len[video_index]:
             item -= self.video_len[video_index]
@@ -36,6 +37,8 @@ class MOTTrainDataset(data.Dataset):
             next_frame_index = 1
         if next_frame_index > self.video_len[video_index]:
             next_frame_index = self.video_len[video_index]
+
+        # load gt file
         gt_file = os.path.join(Config.data_root, 'train', self.video_list[video_index], 'gt/gt.txt')
         gt_parser = pd.read_csv(gt_file, header=None)
         gt_parser = gt_parser[gt_parser[6] == 1]
@@ -45,9 +48,13 @@ class MOTTrainDataset(data.Dataset):
         if current_frame_index == next_frame_index or current_frame_index not in gt_group_keys \
                 or next_frame_index not in gt_group_keys:
             return self.__getitem__(random.randint(0, self.__len__()))
+
+        # load image
         image_path_format = os.path.join(Config.data_root, 'train', self.video_list[video_index], 'img1', '{0:06}.jpg')
         current_image = cv2.imread(image_path_format.format(current_frame_index))
         next_image = cv2.imread(image_path_format.format(next_frame_index))
+
+        # load detection and track_id
         current_detection = gt_group.get_group(current_frame_index).values
         current_id = np.asarray(current_detection)[:, 1].astype(np.int).reshape(-1, 1)
         current_detection = np.asarray(current_detection)[:, 2:6]
@@ -56,6 +63,8 @@ class MOTTrainDataset(data.Dataset):
         next_id = np.asarray(next_detection)[:, 1].astype(np.int).reshape(1, -1)
         next_detection = np.asarray(next_detection)[:, 2:6]
         next_detection[:, 2:4] += next_detection[:, :2]
+
+        # create labels
         labels = np.asarray(current_id == next_id, dtype=np.int)
         labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]),
                                  (0, Config.max_object - labels.shape[1])], mode='constant', constant_values=0)

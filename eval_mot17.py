@@ -91,6 +91,7 @@ def eval(args):
                 n = t.nodes[-1]
                 if t.age == 1:
                     b = n.get_box(i, tracker.recorder)
+                    # for confidence, x, y, z
                     result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
         np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
         print('finished processing {}'.format(res_file))

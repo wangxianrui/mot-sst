@@ -187,17 +187,21 @@ class SST(nn.Module):
         x = torch.cat([x, false_objects_row], 2)
         return x
 
-    def get_similarity(self, feature1, feature2):
+    def get_similarity(self, feature1, mask1, feature2, mask2):
         # forward
         feature = self.stacker_features(feature1, feature2)
         x = self.final_dp(feature)
         x = self.final(x)
         x = self.add_unmatched_dim(x)[0, 0, :]
         # softmax and select
-        x_pre = F.softmax(x, dim=1)
-        x_next = F.softmax(x, dim=0)
-        res = (x_pre + x_next)[:-1, :-1] / 2
-        res = torch.cat([res, x_pre[:-1, -1:]], 1)
+        mask1 = torch.cat([mask1, torch.tensor([1.0]).to(mask1.device)])
+        mask2 = torch.cat([mask2, torch.tensor([1.0]).to(mask2.device)])
+        mask = mask1.unsqueeze(1) * mask2.unsqueeze(0)
+        x = mask * x
+        x_pre = F.softmax(x[:-1, :], dim=1)
+        x_next = F.softmax(x[:, :-1], dim=0)
+        res = (x_pre[:, :-1] + x_next[:-1, :]) / 2
+        res = torch.cat([res, x_pre[:, -1].reshape(-1, 1)], 1)
         return res
 
 

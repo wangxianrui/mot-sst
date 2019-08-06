@@ -53,17 +53,17 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         image = image.permute(2, 0, 1)
 
         # detection
-        detection = torch.from_numpy(detection).float()
+        detection = detection.astype(np.float32)
         det_num = detection.shape[0]
         detection[:, [2, 4]] /= float(w)
         detection[:, [3, 5]] /= float(h)
         if det_num > Config.max_object:
-            index = torch.argsort(detection, descending=False, dim=0)[:, 6]
+            index = np.argsort(-detection, axis=0)[:, 6]
             detection = detection[index[:Config.max_object], :]
         else:
-            detection = F.pad(detection, [0, 0, 0, Config.max_object - detection.shape[0]], value=-1)
-        # x, y, w, h, confidence
+            detection = np.pad(detection, [(0, Config.max_object - det_num), (0, 0)], mode='reflect')
         detection = detection[:, 2:7]
+        detection = torch.from_numpy(detection).float()
 
         # shuffle
         index = np.arange(Config.max_object)
