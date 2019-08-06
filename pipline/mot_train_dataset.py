@@ -104,7 +104,8 @@ class GTSingleParser:
 
     def _getimage(self, frame_index):
         image_path = os.path.join(self.folder, 'img1/{0:06}.jpg'.format(frame_index + 1))
-        return cv2.imread(image_path)
+        return cv2.imdecode(np.fromfile(image_path, dtype=np.uint8), -1)
+        # return cv2.imread(image_path)
 
     def get_item(self, frame_index):
         '''

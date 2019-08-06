@@ -39,40 +39,17 @@ class SSTLoss(object):
         target_next = target[:, :, :, :-1]
         target_union = target[:, :, :-1, :-1]
 
-        # mask = (mask0.unsqueeze(3) * mask1.unsqueeze(2))
-        # mask_pre = mask[:, :, :-1, :].clone()
-        # mask_next = mask[:, :, :, :-1].clone()
-        # mask_union = mask[:, :, :-1, :-1].clone()
-        #
-        # predict_pre = predict[:, :, :-1, :].clone()
-        # predict_pre = torch.nn.Softmax(dim=3)(mask_pre * predict_pre)
-        # predict_next = predict[:, :, :, :-1].clone()
-        # predict_next = torch.nn.Softmax(dim=2)(mask_next * predict_next)
-        # # predict_union = torch.max(predict_pre[:, :, :, :-1], predict_next[:, :, :-1, :])
-        # predict_union = (predict_pre[:, :, :, :-1] + predict_next[:, :, :-1, :]) / 2
-        #
-        # target_pre = mask_pre * target[:, :, :-1, :]
-        # target_next = mask_next * target[:, :, :, :-1]
-        # target_union = mask_union * target[:, :, :-1, :-1]
-
         target_pre_num = target_pre.sum()
         target_next_num = target_next.sum()
         target_union_num = target_union.sum()
 
         # loss 4 part
-        assert target_pre_num > 0, 'target_pre_num should > 0'
-        # loss_pre = -(target_pre * torch.log(predict_pre)).sum() / target_pre_num
         loss_pre = FocalLoss()(predict_pre, target_pre, target_pre_num)
-
-        assert target_next_num > 0, 'traget_next_num should > 0'
-        # loss_next = -(target_next * torch.log(predict_next)).sum() / target_next_num
         loss_next = FocalLoss()(predict_next, target_next, target_next_num)
-
-        assert target_union_num > 0, 'target_union_num should > 0'
-        # loss_union = -(target_union * torch.log(predict_union)).sum() / target_union_num
         loss_union = FocalLoss()(predict_union, target_union, target_union_num)
+        loss_unmatched = FocalLoss()(predict_pre[:, :, :, -1], target_pre[:, :, :, -1], target_pre_num - target_union_num) \
+                         + FocalLoss()(predict_next[:, :, -1, :], target_next[:, :, -1, :], target_next_num - target_union_num)
         loss_sim = 2 * (target_union * torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
-
         loss = (loss_pre + loss_next + loss_union + loss_sim) / 4.0
         return loss_pre, loss_next, loss_union, loss_sim, loss
 
@@ -84,4 +61,6 @@ class FocalLoss(object):
         self.gamma = 2
 
     def __call__(self, predict, target, target_num):
+        if target_num == 0:
+            return torch.tensor(0)
         return -self.alpha * (target * torch.pow(1 - predict, self.gamma) * torch.log(predict)).sum() / target_num

@@ -51,8 +51,10 @@ class MOTTrainDataset(data.Dataset):
 
         # load image
         image_path_format = os.path.join(Config.data_root, 'train', self.video_list[video_index], 'img1', '{0:06}.jpg')
-        current_image = cv2.imread(image_path_format.format(current_frame_index))
-        next_image = cv2.imread(image_path_format.format(next_frame_index))
+        current_image = cv2.imdecode(np.fromfile(image_path_format.format(current_frame_index), dtype=np.uint8), -1)
+        next_image = cv2.imdecode(np.fromfile(image_path_format.format(next_frame_index), dtype=np.uint8), -1)
+        # current_image = cv2.imread(image_path_format.format(current_frame_index))
+        # next_image = cv2.imread(image_path_format.format(next_frame_index))
 
         # load detection and track_id
         current_detection = gt_group.get_group(current_frame_index).values

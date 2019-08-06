@@ -125,6 +125,7 @@ def train():
                 writer.add_scalar('loss/loss', loss.item(), log_index)
                 writer.add_scalar('loss/loss_pre', loss_pre.item(), log_index)
                 writer.add_scalar('loss/loss_next', loss_next.item(), log_index)
+                writer.add_scalar('loss/loss_union', loss_union.item(), log_index)
                 writer.add_scalar('loss/loss_sim', loss_sim.item(), log_index)
             if (index + 1) % Config.save_step == 0:
                 ckpt_name = 'sst900_{}_{}.pth'.format(epoch, index)

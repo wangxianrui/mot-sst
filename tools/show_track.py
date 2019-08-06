@@ -27,7 +27,8 @@ def main(args):
         avi_file = os.path.join(Config.result_dir, args.type, 'avi', txt_name[:-4] + '.avi')
         img_dir = os.path.join(Config.data_root, args.type, txt_name[:-4], 'img1')
         img_nums = len([name for name in os.listdir(img_dir) if 'jpg' in name])
-        temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
+        temp_img = cv2.imdecode(np.fromfile(os.path.join(img_dir, '000001.jpg'), dtype=np.uint8), -1)
+        # temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 25, (w, h))
 
@@ -37,7 +38,8 @@ def main(args):
         print('txt_name: {} || total number of frames: {}'.format(txt_name, img_nums))
         for t in tqdm(range(1, img_nums + 1)):
             img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
-            img = cv2.imread(img_name)
+            img = cv2.imdecode(np.fromfile(img_name, dtype=np.uint8), -1)
+            # img = cv2.imread(img_name)
             overlay = img.copy()
             row_ind = np.where(res_raw[:, 0] == t)[0]
             for i in range(0, row_ind.shape[0]):

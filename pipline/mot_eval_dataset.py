@@ -33,7 +33,8 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         return self.detection_group.get_group(index).values
 
     def get_image_by_index(self, index):
-        return cv2.imread(self.image_format.format(index)).astype(np.float32)
+        return cv2.imdecode(np.fromfile(self.image_format.format(index), dtype=np.uint8), -1).astype(np.float32)
+        # return cv2.imread(self.image_format.format(index)).astype(np.float32)
 
     def __getitem__(self, item):
         image = self.get_image_by_index(item + 1)

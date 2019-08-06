@@ -41,7 +41,8 @@ def main(args):
         acc = motmetrics.MOTAccumulator(auto_id=True)
 
         frames_gt = read_txt_gtV2(os.path.join(data_root, vname, "gt/gt.txt"))
-        h, w, _ = cv2.imread(os.path.join(data_root, vname, 'img1/000001.jpg')).shape
+        h, w, _ = cv2.imdecode(np.fromfile(os.path.join(data_root, vname, 'img1/000001.jpg'), dtype=np.uint8), -1).shape
+        # h, w, _ = cv2.imread(os.path.join(data_root, vname, 'img1/000001.jpg')).shape
         frames_prdt = read_txt_predictionV2(os.path.join(txts_dir, txt_file))
 
         # evaluations
