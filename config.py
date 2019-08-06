@@ -11,13 +11,13 @@ class Config:
     data_root = '../dataset/CAR'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
-    use_cuda = True
+    use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 45
+    max_object = 8
     image_size = (sst_dim, sst_dim)
     false_constant = 1
-    detector = 'FRCNN'  # DPM, SDP, FRCNN
+    detector = ''  # DPM, SDP, FRCNN
 
 
 class TrainConfig(Config):
@@ -45,10 +45,12 @@ class TrainConfig(Config):
 class EvalConfig(Config):
     model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result'
-    max_track_frame = 5
+    max_track_frame = 10
     # filter out
     low_confidence = 0.3
     # add to track
     high_confidence = 0.8
     # iou
     iou_threshold = 0.4
+    # max interval frames
+    max_interval = 25

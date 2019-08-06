@@ -25,6 +25,7 @@ def main(args):
         txt_file = os.path.join(data_root, video_name, 'gt/gt.txt')
         avi_file = os.path.join(args.save_dir, args.type, video_name + '.avi')
         img_dir = os.path.join(data_root, video_name, 'img1')
+        img_nums = len([name for name in os.listdir(img_dir) if 'jpg' in name])
         temp_img = cv2.imread(os.path.join(img_dir, '000001.jpg'))
         h, w, _ = temp_img.shape
         vwriter = cv2.VideoWriter(avi_file, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 25, (w, h))
@@ -34,9 +35,8 @@ def main(args):
         res_raw = res_raw[res_raw[:, -3] == 1, :]
         res_raw = res_raw[res_raw[:, -1] >= 0.3, :]
         res_raw[:, 0:6] = np.array(res_raw[:, 0:6]).astype(np.int)
-        n_frame = max(res_raw[:, 0])
-        print('video_name: {} || total number of frames: {}'.format(video_name, n_frame))
-        for t in tqdm(range(1, int(n_frame))):
+        print('video_name: {} || total number of frames: {}'.format(video_name, img_nums))
+        for t in tqdm(range(1, img_nums + 1)):
             img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
             img = cv2.imread(img_name)
             overlay = img.copy()
