@@ -17,7 +17,5 @@ import shutil
 from scipy.optimize import linear_sum_assignment
 import time
 
-a = torch.rand(1, 520, 45, 1)
-b = torch.rand(1, 520, 1, 45)
-c = torch.matmul(a, b)
-print(c.shape)
+data = pd.read_csv('result/test/txt/sequence_01.txt')
+print(data)

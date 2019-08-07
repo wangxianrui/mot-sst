@@ -68,26 +68,6 @@ def eval(args):
                     result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
         np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
         print('finished processing {}'.format(res_file))
-        save_fragment(vname, result)
-
-
-def save_fragment(vname, track_data):
-    track_group = pd.DataFrame(track_data).groupby(1)
-    track_ids = track_group.indices.keys()
-    video_fragment = []
-    for id in track_ids:
-        track = track_group.get_group(id).values
-        fragment = [np.min(track[:, 0]), np.max(track[:, 0])]
-        if len(video_fragment) == 0 or fragment[0] - video_fragment[-1][1] > Config.max_interval:
-            video_fragment.append(fragment)
-        else:
-            last_fragment = video_fragment[-1]
-            video_fragment[-1] = [min(last_fragment[0], fragment[0]), max(last_fragment[1], fragment[1])]
-    with open('result/interval.txt', 'a') as file:
-        file.write(vname + '\n')
-        for fragment in video_fragment:
-            file.write('\t' + str(fragment) + '\n')
-        file.write('\n\n')
 
 
 if __name__ == '__main__':

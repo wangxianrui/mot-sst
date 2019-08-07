@@ -23,8 +23,8 @@ class Config:
 class TrainConfig(Config):
     backbone = 'pretrained/vgg16_reducedfc.pth'
     from_training = ''
-    batch_size = 8
-    num_workers = 8
+    batch_size = 1
+    num_workers = 1
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 15
@@ -36,7 +36,7 @@ class TrainConfig(Config):
     }
     max_epoch = 10
     momentum = 0.9
-    weight_decay = 1e-4
+    weight_decay = 5e-4
     log_setp = 1
     save_step = 200
 
@@ -51,5 +51,6 @@ class EvalConfig(Config):
     high_confidence = 0.8
     # iou
     iou_threshold = 0.4
-    # max interval frames
-    max_interval = 25
+    # max interval frames, and min duration
+    max_interval = 10
+    min_duration = 25

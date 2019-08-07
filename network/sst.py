@@ -209,6 +209,4 @@ def build_sst(size=900):
     if size != 900:
         print('Error: Sorry only SST 900 is supported currently!')
         return
-    # from . import sst_custom
-    # return sst_custom.SST()
     return SST()

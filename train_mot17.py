@@ -58,7 +58,7 @@ def train():
         optimizer.load_state_dict(pretrained['optimizer'])
         start_epoch = pretrained['epoch']
     else:
-        '''
+        # '''
         print('load pretrained from pretrained/sst900_mot.pth')
         if Config.use_cuda:
             pretrained = torch.load('pretrained/sst900_mot.pth')
@@ -72,7 +72,7 @@ def train():
         else:
             backbone = torch.load(Config.backbone, map_location='cpu')
         net.module.base.layers.load_state_dict(backbone)
-        # '''
+        '''
     net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):
@@ -110,14 +110,18 @@ def train():
             # forward
             out = net(img_pre, img_next, boxes_pre, boxes_next)
 
-            loss_pre, loss_next, loss_union, loss_sim, loss = criterion(out, labels, valid_pre, valid_next)
+            loss_pre, loss_next, loss_union, loss_sim, loss, target_pre_num, target_next_num, target_union_num \
+                = criterion(out, labels, valid_pre, valid_next)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
+                print('epoch: {} || iter: {} || lr: {}'
+                      .format(epoch, index, optimizer.param_groups[0]['lr']))
+                print('target_pre_num: {} || target_next_num: {} || target_union_num: {}'
+                      .format(target_pre_num, target_next_num, target_union_num))
                 print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
                       .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
                 log_index = len(dataloader) * epoch + index
