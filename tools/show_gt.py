@@ -40,7 +40,6 @@ def main(args):
         for t in tqdm(range(1, img_nums + 1)):
             img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
             img = cv2.imdecode(np.fromfile(img_name, dtype=np.uint8), -1)
-            # img = cv2.imread(img_name)
             overlay = img.copy()
             row_ind = np.where(res_raw[:, 0] == t)[0]
             for i in range(0, row_ind.shape[0]):

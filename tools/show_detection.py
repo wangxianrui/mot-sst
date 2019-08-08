@@ -1,29 +1,19 @@
 # -*- coding:utf-8 -*-
 """
 @authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
+@time: 2019/8/8 16:50
+@file: show_detection.py
 @description:
 """
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import pandas as pd
-import torchvision.models as models
-import cv2
 import os
-import shutil
-from scipy.optimize import linear_sum_assignment
-import time
-from config import EvalConfig as Config
-from torch.utils.data import DataLoader
-from pipline.mot_train_dataset_ import MOTTrainDataset
-import random
+import numpy as np
+import cv2
 
+confidence_thershold = 0.3
 video_dir = 'D:/movies_08_06/SG教会我爱你第一季-01'
+
 detection = np.loadtxt(os.path.join(video_dir, 'det', 'det.txt'), delimiter=',')
-detection = detection[detection[:, 6] > Config.high_confidence, :]
+detection = detection[detection[:, 6] > confidence_thershold, :]
 frame_index = np.unique(detection[:, 0]).astype(np.int)
 cv2.namedWindow('win', cv2.WINDOW_NORMAL)
 for index in frame_index:

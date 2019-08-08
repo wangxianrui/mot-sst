@@ -8,16 +8,16 @@
 
 
 class Config:
-    data_root = '../dataset/MOT17'
+    data_root = '../dataset/CAR'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 45
+    max_object = 8
     image_size = (sst_dim, sst_dim)
     false_constant = 1
-    detector = 'FRCNN'  # DPM, SDP, FRCNN
+    detector = ''  # DPM, SDP, FRCNN
 
 
 class TrainConfig(Config):
@@ -28,23 +28,25 @@ class TrainConfig(Config):
     min_visibility = 0.3
     min_gap_frame = 0
     max_gap_frame = 15
-    lr_init = 1e-2
+    lr_init = 1e-3
     lr_map = {
-        '2': 1e-3,
-        '7': 1e-4,
-        '9': 1e-5,
+        '1': 1e-2,
+        '5': 1e-3,
+        '8': 1e-4,
     }
     max_epoch = 10
     momentum = 0.9
     weight_decay = 5e-4
-    log_setp = 1
+    focal_alpha = 1
+    focal_gamma = 2
+    log_setp = 10
     save_step = 200
 
 
 class EvalConfig(Config):
     model_path = 'pretrained/sst900_final.pth'
     result_dir = 'result'
-    max_track_frame = 10
+    max_track_frame = 5
     # filter out
     low_confidence = 0.3
     # add to track
@@ -52,5 +54,5 @@ class EvalConfig(Config):
     # iou
     iou_threshold = 0.4
     # max interval frames, and min duration
-    max_interval = 10
+    max_interval = 50
     min_duration = 25

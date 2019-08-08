@@ -47,7 +47,7 @@ class MOTTrainDataset(data.Dataset):
         gt_group_keys = gt_group.indices.keys()
         if current_frame_index == next_frame_index or current_frame_index not in gt_group_keys \
                 or next_frame_index not in gt_group_keys:
-            return self.__getitem__(random.randint(0, self.__len__()))
+            return self.__getitem__(np.random.randint(0, self.__len__()))
 
         # load image
         image_path_format = os.path.join(Config.data_root, 'train', self.video_list[video_index], 'img1', '{0:06}.jpg')

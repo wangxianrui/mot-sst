@@ -58,7 +58,7 @@ def train():
         optimizer.load_state_dict(pretrained['optimizer'])
         start_epoch = pretrained['epoch']
     else:
-        # '''
+        '''
         print('load pretrained from pretrained/sst900_mot.pth')
         if Config.use_cuda:
             pretrained = torch.load('pretrained/sst900_mot.pth')
@@ -72,7 +72,7 @@ def train():
         else:
             backbone = torch.load(Config.backbone, map_location='cpu')
         net.module.base.layers.load_state_dict(backbone)
-        '''
+        # '''
     net.train()
 
     for epoch in range(start_epoch, Config.max_epoch):

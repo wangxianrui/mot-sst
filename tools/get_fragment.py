@@ -28,7 +28,8 @@ def get_fragment(track_file, file_name):
     with open(file_name, 'a') as file:
         file.write(track_file[:-4] + '\n')
         for fragment in video_fragment:
-            file.write('\t' + str(fragment) + '\n')
+            if (fragment[1] - fragment[0]) > Config.min_duration:
+                file.write('\t' + str(fragment) + '\n')
         file.write('\n\n')
 
 

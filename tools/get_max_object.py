@@ -7,20 +7,19 @@
 """
 import os
 import pandas as pd
-from config import TrainConfig as Config
+from config import EvalConfig as Config
 
 
 def main():
-    data_root = os.path.join(Config.data_root, 'train')
+    data_root = os.path.join(Config.data_root, 'test')
     video_list = os.listdir(data_root)
     max_object = 0
     for video_name in video_list:
         if Config.detector not in video_name:
             continue
-        gt_file_path = os.path.join(data_root, video_name, 'gt/gt.txt')
+        gt_file_path = os.path.join(data_root, video_name, 'det/det.txt')
         gt_file = pd.read_csv(gt_file_path, header=None)
-        gt_file = gt_file[gt_file[6] == 1]
-        gt_file = gt_file[gt_file[8] > Config.min_visibility]
+        gt_file = gt_file[gt_file[6] > Config.low_confidence]
         gt_group = gt_file.groupby(0)
         gt_group_keys = gt_group.indices.keys()
         frame_len = [len(gt_group.indices[key]) for key in gt_group_keys]

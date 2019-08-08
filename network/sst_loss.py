@@ -7,7 +7,11 @@
 """
 import torch
 import torch.nn.functional as F
-from config import Config
+from config import TrainConfig as Config
+
+
+def print_grad(grad):
+    print('hook:', grad)
 
 
 class SSTLoss(object):
@@ -30,6 +34,9 @@ class SSTLoss(object):
         mask = mask0.unsqueeze(3) * mask1.unsqueeze(2)
 
         predict = mask * predict
+        # test
+        # predict.register_hook(print_grad)
+        #
         predict_pre = torch.nn.Softmax(dim=3)(predict[:, :, :-1, :])
         predict_next = torch.nn.Softmax(dim=2)(predict[:, :, :, :-1])
         predict_union = (predict_pre[:, :, :, :-1] + predict_next[:, :, :-1, :]) / 2
@@ -57,10 +64,10 @@ class SSTLoss(object):
 class FocalLoss(object):
     def __init__(self):
         super(FocalLoss, self).__init__()
-        self.alpha = 1
-        self.gamma = 2
+        self.alpha = Config.focal_alpha
+        self.gamma = Config.focal_gamma
 
     def __call__(self, predict, target, target_num):
         if target_num == 0:
-            return torch.tensor(0)
+            return torch.tensor(0, device=predict.device)
         return -self.alpha * (target * torch.pow(1 - predict, self.gamma) * torch.log(predict)).sum() / target_num
