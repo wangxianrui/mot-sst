@@ -8,9 +8,7 @@
 import os
 import argparse
 from tqdm import tqdm
-import time
 import numpy as np
-import pandas as pd
 import torch
 from config import EvalConfig as Config
 from pipline.mot_eval_dataset import MOTEvalDataset

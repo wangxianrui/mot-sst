@@ -34,7 +34,7 @@ def main(args):
         res_raw = np.array(res_raw).astype(np.float32)
         res_raw[:, 0:6] = np.array(res_raw[:, 0:6]).astype(np.int)
         frame_index = np.unique(res_raw[:, 0]).astype(np.int)
-        print('txt_name: {} || total number of frames: {}'.format(txt_name, max(frame_index)))
+        print('txt_name: {} || total number of frames: {}'.format(txt_name, len(frame_index)))
         for t in tqdm(frame_index):
             img_name = os.path.join(img_dir, str(t).zfill(6) + '.jpg')
             img = cv2.imdecode(np.fromfile(img_name, dtype=np.uint8), -1)

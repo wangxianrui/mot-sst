@@ -9,7 +9,6 @@ import argparse
 import pandas as pd
 import numpy as np
 import os
-import shutil
 from config import EvalConfig as Config
 
 
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     file_name = os.path.join(Config.result_dir, 'interval.txt')
     if os.path.exists(file_name):
-        shutil.rmtree(file_name)
+        os.remove(file_name)
     res_list = os.listdir(os.path.join(Config.result_dir, args.type, 'txt'))
     for track_file in res_list:
         track_file = os.path.join(Config.result_dir, args.type, 'txt', track_file)

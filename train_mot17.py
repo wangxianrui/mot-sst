@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from config import TrainConfig as Config
 from network.sst import build_sst
 from network.sst_loss import SSTLoss
-from pipline.mot_train_dataset_ import MOTTrainDataset, collate_fn
+from pipline.mot_train_dataset import MOTTrainDataset, collate_fn
 
 
 def adjust_lr(epoch, optimizer):
@@ -44,7 +44,8 @@ def train():
 
     # criterion && optimizer
     criterion = SSTLoss()
-    optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, weight_decay=Config.weight_decay)
+    # optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, weight_decay=Config.weight_decay)
+    optimizer = torch.optim.Adam(net.parameters(), lr=Config.lr_init, weight_decay=Config.weight_decay)
 
     # from training
     start_epoch = 0
