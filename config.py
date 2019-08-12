@@ -52,7 +52,7 @@ class EvalConfig(Config):
     # add to track
     high_confidence = 0.8
     # iou
-    iou_threshold = 0.4
+    iou_threshold = 0.3
     # max interval frames, and min duration
     max_interval = 50
     min_duration = 25

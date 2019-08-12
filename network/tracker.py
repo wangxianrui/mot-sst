@@ -56,7 +56,7 @@ class FeatureRecorder:
 
         self.all_iou[frame_index] = {}
         for pre_index in self.all_frame_index[:-1]:
-            iou = self.get_iou(self.all_boxes[pre_index].clone(), boxes.clone())
+            iou = self.get_iou(self.all_boxes[pre_index][:, :-1].clone(), boxes[:, :-1].clone())
             self.all_iou[frame_index][pre_index] = iou
 
     def get_iou(self, bboxes1, bboxes2):
@@ -104,14 +104,7 @@ class Track:
         self.id = track_id
         self.age = 0
 
-    def add_node(self, frame_index, recorder, node):
-        # if len(self.nodes) > 0:
-        #     n = self.nodes[-1]
-        #     iou = n.get_iou(frame_index, recorder, node.det_index)
-        #     delta_frame = frame_index - n.frame_index
-        #     # filter out with low iou
-        #     if iou < 0.5 ** delta_frame:
-        #         return
+    def add_node(self, node):
         self.nodes.append(node)
         self.age = 0
 
@@ -181,8 +174,6 @@ class SSTTracker:
         @Return: 
         '''
         valid_index = torch.nonzero(valid_mask).squeeze(dim=1)
-        confidence = detection[:, -1]
-        detection = detection[:, :-1]
         features = self.sst.forward_feature(image.unsqueeze(0), self.convert_detection(detection.clone()))
         self.recorder.update(self.sst, frame_index, features, detection, valid_mask)
         track_num = len(self.tracks)
@@ -192,12 +183,11 @@ class SSTTracker:
         if frame_index == 0 or track_num == 0:
             for index in valid_index:
                 # add new track
-                if confidence[index] > Config.high_confidence:
-                    track = Track(self.id_pool)
-                    self.id_pool += 1
-                    node = Node(frame_index, index)
-                    track.add_node(frame_index, self.recorder, node)
-                    self.add_track(track)
+                track = Track(self.id_pool)
+                self.id_pool += 1
+                node = Node(frame_index, index)
+                track.add_node(node)
+                self.add_track(track)
         else:
             # similarity between track and detection    track_num * det_num + 1
             similarity = self.get_similarity(frame_index, self.recorder, valid_index)
@@ -213,18 +203,17 @@ class SSTTracker:
                 if col_index[i] != -1:
                     det_index = valid_index[col_index[i]]
                     node = Node(frame_index, det_index)
-                    track.add_node(frame_index, self.recorder, node)
+                    track.add_node(node)
             # add new tracks
             for j in range(det_num):
                 if j not in col_index:
                     index = valid_index[j]
                     # add new track
-                    if confidence[index] > Config.high_confidence:
-                        track = Track(self.id_pool)
-                        self.id_pool += 1
-                        node = Node(frame_index, index)
-                        track.add_node(frame_index, self.recorder, node)
-                        self.add_track(track)
+                    track = Track(self.id_pool)
+                    self.id_pool += 1
+                    node = Node(frame_index, index)
+                    track.add_node(node)
+                    self.add_track(track)
         self.one_frame_pass()
 
     def convert_detection(self, detection):

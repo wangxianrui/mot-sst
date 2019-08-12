@@ -41,5 +41,6 @@ if __name__ == '__main__':
         os.remove(file_name)
     res_list = os.listdir(os.path.join(Config.result_dir, args.type, 'txt'))
     for track_file in res_list:
+        print(track_file)
         track_file = os.path.join(Config.result_dir, args.type, 'txt', track_file)
         get_fragment(track_file, file_name)

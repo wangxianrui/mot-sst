@@ -62,10 +62,20 @@ def eval(args):
                 n = t.nodes[-1]
                 if t.age == 1:
                     b = n.get_box(i, tracker.recorder)
-                    # -1 for confidence, x, y, z
-                    result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [-1, -1, -1, -1])
-        np.savetxt(res_file, np.int_(result), fmt='%i', delimiter=',')
+                    # -1 for x, y, z
+                    result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [b[4], -1, -1, -1])
+        np.savetxt(res_file, post_precessing(result), fmt='%.2f', delimiter=',')
         print('finished processing {}'.format(res_file))
+
+
+def post_precessing(result):
+    result = np.asarray(result).reshape(-1, 10)
+    id_list = np.unique(result[:, 1])
+    for track_id in id_list:
+        track = result[result[:, 1] == track_id, :]
+        if np.max(track[:, 6]) < Config.high_confidence:
+            result = result[result[:, 1] != track_id, :]
+    return result
 
 
 if __name__ == '__main__':
