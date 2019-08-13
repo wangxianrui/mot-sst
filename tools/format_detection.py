@@ -27,8 +27,8 @@ for video_name in video_list:
         shutil.move(os.path.join(video_name, img), os.path.join(img_dir, img))
 
 # create detection file
-with open(detection_txt, encoding='utf-8') as file:
-    file_data = file.read().splitlines()
+with open(detection_txt, encoding='utf-8') as det_file:
+    file_data = det_file.read().splitlines()
 
     video_name = None
     for line in file_data:

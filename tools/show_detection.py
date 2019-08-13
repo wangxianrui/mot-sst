@@ -9,7 +9,7 @@ import os
 import numpy as np
 import cv2
 
-confidence_thershold = 0.3
+confidence_thershold = 0.8
 video_dir = 'D:/movies_08_06/test/SG教会我爱你第一季-01'
 
 detection = np.loadtxt(os.path.join(video_dir, 'det', 'det.txt'), delimiter=',')
@@ -17,6 +17,8 @@ detection = detection[detection[:, 6] > confidence_thershold, :]
 frame_index = np.unique(detection[:, 0]).astype(np.int)
 cv2.namedWindow('win', cv2.WINDOW_NORMAL)
 for index in frame_index:
+    # if index < 15510:
+    #     continue
     img = cv2.imdecode(np.fromfile(os.path.join(video_dir, 'img1', '{0:06}.jpg'.format(index)), dtype=np.uint8), -1)
     frame_det = detection[detection[:, 0] == index, :]
     print(index, '\t', len(frame_det))

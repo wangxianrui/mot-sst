@@ -124,7 +124,8 @@ class Track:
         f = self.nodes[-1].frame_index
         id = self.nodes[-1].det_index
         iou_similarity = recorder.all_iou[frame_index][f][id, :][valid_index]
-        similarity[:-1][iou_similarity < Config.iou_threshold ** (frame_index - f)] = 0
+        similarity[:-1] *= iou_similarity
+        # similarity[:-1][iou_similarity < Config.iou_threshold ** (frame_index - f)] = 0
         return similarity
 
 
