@@ -170,10 +170,11 @@ def read_txt_gtV2(textpath):
             # we only consider "pedestrian" class #
             if len(line) < 7 or int(line[7]) != 1 or int(line[6]) == 0:
                 continue
-            if not (line[0]) in frames:
-                frames[line[0]] = []
+            index = str(int(float(line[0])))
+            if index not in frames:
+                frames[index] = []
             bbox = xywh2xyxy(line[2:6])
-            frames[line[0]].append([line[1]] + bbox)
+            frames[index].append([int(float(line[1]))] + bbox)
     ordered = reorder_frameID(frames)
     return ordered
 
@@ -193,10 +194,11 @@ def read_txt_predictionV2(textpath):
                 line = line[0].split(' ')
             if len(line) <= 5:
                 continue
-            if not (line[0]) in frames:
-                frames[line[0]] = []
+            index = str(int(float(line[0])))
+            if index not in frames:
+                frames[index] = []
             bbox = xywh2xyxy(line[2:6])
-            frames[line[0]].append([int(line[1])] + bbox)
+            frames[index].append([int(float(line[1]))] + bbox)
     ordered = reorder_frameID(frames)
     return ordered
 

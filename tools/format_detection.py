@@ -1,15 +1,14 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: 2019/8/7 15:46
-@file: format_detection.py
-@description:
+'''
+@Author: rayenwang
+@Date: 2019-08-12 21:20:01
+@Description: 
     format.py
     imgdir1
     imgdir2
     ...
     detectiontxt
-"""
+'''
+
 import os
 import shutil
 
@@ -48,7 +47,8 @@ with open(detection_txt, encoding='utf-8') as det_file:
         frame_index = int(os.path.split(line[0])[-1][:-4])
         # confidence, x, y, x, y
         det = [float(n) for n in line[2:]]
-        string = '{},-1,{},{},{},{},{:.4f},-1,-1,-1\n'.format(frame_index, det[1], det[2], det[3] - det[1], det[4] - det[2], det[0])
+        string = '{},-1,{},{},{},{},{:.4f},-1,-1,-1\n'.format(frame_index, det[1], det[2], det[3] - det[1],
+                                                              det[4] - det[2], det[0])
         file.write(string)
 '''
 /data2/mionyu/movies_08_06/SG教会我爱你第一季-10/000070.jpg 3 0.0553201 34 391 50 402

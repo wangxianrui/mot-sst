@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-07 15:48:13
+@Description: 
+'''
+
 import random
 import argparse
 import os

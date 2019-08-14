@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-06 16:46:50
+@Description: 
+'''
+
 import os
 import pandas as pd
 import cv2

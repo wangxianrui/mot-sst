@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-14 16:30:02
+@Description: 
+'''
+
 import os
 import argparse
 from tqdm import tqdm
@@ -53,6 +52,7 @@ def eval(args):
                 img = img.cuda()
                 det = det.cuda()
                 mask = mask.cuda()
+            print(i)
 
             # track
             tracker.update(img, det, mask, i)

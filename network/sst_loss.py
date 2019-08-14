@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-07 20:21:12
+@Description: 
+'''
+
 import torch
 import torch.nn.functional as F
 from config import TrainConfig as Config

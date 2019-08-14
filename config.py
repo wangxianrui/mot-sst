@@ -1,10 +1,8 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-14 11:16:18
+@Description: 
+'''
 
 
 class Config:
@@ -26,7 +24,6 @@ class TrainConfig(Config):
     batch_size = 1
     num_workers = 1
     min_visibility = 0.3
-    min_gap_frame = 0
     max_gap_frame = 15
     lr_init = 1e-3
     lr_map = {

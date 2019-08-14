@@ -1,12 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-14 16:30:48
+@Description: 
+'''
 import torch
-import math
 from scipy.optimize import linear_sum_assignment
 from config import EvalConfig as Config
 from .sst import build_sst
@@ -24,7 +21,6 @@ class FeatureRecorder:
         similarity[frame_index][preframe]
     @Return:
     '''
-
     def __init__(self):
         self.all_frame_index = []
         self.all_features = {}
@@ -192,6 +188,7 @@ class SSTTracker:
         else:
             # similarity between track and detection    track_num * det_num + 1
             similarity = self.get_similarity(frame_index, self.recorder, valid_index)
+            print(similarity)
             additional = torch.repeat_interleave(similarity[:, -1].reshape(track_num, 1), track_num - 1, dim=1)
             similarity = torch.cat([similarity, additional], dim=1).detach().cpu().numpy()
 

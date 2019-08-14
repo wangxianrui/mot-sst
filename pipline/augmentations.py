@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: ${DATE} ${TIME}
-@file: ${NAME}.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-05 20:04:02
+@Description: 
+'''
+
 import torch
 import cv2
 import numpy as np
@@ -48,7 +47,6 @@ class Compose(object):
             transforms.ToTensor(),
         ])
     """
-
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -60,7 +58,6 @@ class Compose(object):
 
 class Lambda(object):
     """Applies a lambda as a transform."""
-
     def __init__(self, lambd):
         assert isinstance(lambd, types.LambdaType)
         self.lambd = lambd
@@ -149,7 +146,6 @@ class SwapChannels(object):
         swaps (int triple): final order of channels
             eg: (2, 1, 0)
     """
-
     def __init__(self, swaps):
         self.swaps = swaps
 
@@ -281,7 +277,6 @@ class FormatBoxes(object):
     '''
     note: format the label in order to input into the selector net.
     '''
-
     def __init__(self, keep_box=False):
         self.keep_box = keep_box
 
@@ -291,8 +286,7 @@ class FormatBoxes(object):
         '''
         if not self.keep_box:
             # format to -1 -- 1     x1 + x2 - 1
-            f = lambda boxes: np.expand_dims(np.expand_dims(
-                boxes[:, :2] + boxes[:, 2:] - 1, axis=1), axis=1)
+            f = lambda boxes: np.expand_dims(np.expand_dims(boxes[:, :2] + boxes[:, 2:] - 1, axis=1), axis=1)
         else:
             raise NotImplementedError
 
@@ -343,7 +337,8 @@ class PhotometricDistort(object):
     def __call__(self, img_pre, img_next, boxes_pre=None, boxes_next=None, labels=None):
         im_pre = img_pre.copy()
         im_next = img_next.copy()
-        im_pre, im_next, boxes_pre, boxes_next, labels = self.rand_brightness(im_pre, im_next, boxes_pre, boxes_next, labels)
+        im_pre, im_next, boxes_pre, boxes_next, labels = self.rand_brightness(im_pre, im_next, boxes_pre, boxes_next,
+                                                                              labels)
         if random.randint(2):
             distort = Compose(self.pd[:-1])
         else:
@@ -392,7 +387,6 @@ class RandomSampleCrop(object):
     Arguments:
         mode (float tuple): the min and max jaccard overlaps
     """
-
     def __init__(self):
         self.sample_options = (
             None,
@@ -450,11 +444,13 @@ class RandomSampleCrop(object):
         if isPre:
             current_labels = current_labels[np.logical_not(mask), :]
             current_labels = np.pad(current_labels, [[0, h - current_labels.shape[0]], [0, 0]],
-                                    mode='constant', constant_values=0.0)
+                                    mode='constant',
+                                    constant_values=0.0)
         else:
             current_labels = current_labels[:, np.logical_not(mask)]
             current_labels = np.pad(current_labels, [[0, 0], [0, w - current_labels.shape[1]]],
-                                    mode='constant', constant_values=0.0)
+                                    mode='constant',
+                                    constant_values=0.0)
 
         # should we use the box left and top corner or the crop's
         current_boxes[:, :2] = np.maximum(current_boxes[:, :2], rect[:2])
@@ -498,7 +494,7 @@ class RandomSampleCrop(object):
                 if res_pre is None:
                     continue
 
-                res_next = self.crop(img_next, boxes_next, res_pre[2], mode, min_iou, max_iou, w, h, left, top, isPre=False)
+                res_next = self.crop(img_next, boxes_next, res_pre[2], mode, min_iou, max_iou, w, h, left, top, False)
                 if res_next is None:
                     continue
                 else:

@@ -7,4 +7,5 @@ logs/
 pretrained/
 result/
 ground_truth/
+temp/
 clean_detections/

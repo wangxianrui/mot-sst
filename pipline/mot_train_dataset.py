@@ -1,10 +1,9 @@
-# -*- coding:utf-8 -*-
-"""
-@authors: rayenwang
-@time: 2019/8/5 11:35
-@file: mot_train_dataset_.py
-@description:
-"""
+'''
+@Author: rayenwang
+@Date: 2019-08-08 20:19:31
+@Description: 
+'''
+
 import os
 import random
 import numpy as np
@@ -21,9 +20,12 @@ class MOTTrainDataset(data.Dataset):
     def __init__(self):
         super(MOTTrainDataset, self).__init__()
         self.transform = SSTTrainAugment(Config.sst_dim, Config.mean_pixel)
-        self.video_list = [name for name in os.listdir(os.path.join(Config.data_root, 'train')) if Config.detector in name]
-        self.video_len = [len(os.listdir(os.path.join(Config.data_root, 'train', name, 'img1')))
-                          for name in self.video_list]
+        self.video_list = [
+            name for name in os.listdir(os.path.join(Config.data_root, 'train')) if Config.detector in name
+        ]
+        self.video_len = [
+            len(os.listdir(os.path.join(Config.data_root, 'train', name, 'img1'))) for name in self.video_list
+        ]
 
     def __getitem__(self, item):
         # video index and frame index
@@ -68,8 +70,9 @@ class MOTTrainDataset(data.Dataset):
 
         # create labels
         labels = np.asarray(current_id == next_id, dtype=np.int)
-        labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]),
-                                 (0, Config.max_object - labels.shape[1])], mode='constant', constant_values=0)
+        labels = np.pad(labels, [(0, Config.max_object - labels.shape[0]), (0, Config.max_object - labels.shape[1])],
+                        mode='constant',
+                        constant_values=0)
         return self.transform(current_image, next_image, current_detection, next_detection, labels)
 
     def __len__(self):
