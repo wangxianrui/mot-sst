@@ -6,7 +6,7 @@
 
 
 class Config:
-    data_root = '../dataset/CAR'
+    data_root = '../dataset/movies_08_06'
     log_dir = 'logs'
     ckpt_dir = 'checkpoints'
     use_cuda = False
@@ -52,4 +52,4 @@ class EvalConfig(Config):
     iou_threshold = 0.3
     # max interval frames, and min duration
     max_interval = 50
-    min_duration = 25
+    min_duration = 125

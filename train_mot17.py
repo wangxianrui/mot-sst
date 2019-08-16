@@ -33,8 +33,12 @@ def train():
     # prepare dataset
     print('loading dataset...')
     dataset = MOTTrainDataset()
-    dataloader = torch.utils.data.DataLoader(dataset, Config.batch_size, shuffle=True,
-                                             num_workers=Config.num_workers, collate_fn=collate_fn, drop_last=True)
+    dataloader = torch.utils.data.DataLoader(dataset,
+                                             Config.batch_size,
+                                             shuffle=True,
+                                             num_workers=Config.num_workers,
+                                             collate_fn=collate_fn,
+                                             drop_last=True)
 
     # create model
     net = torch.nn.DataParallel(build_sst())
@@ -43,7 +47,10 @@ def train():
 
     # criterion && optimizer
     criterion = SSTLoss()
-    # optimizer = torch.optim.SGD(net.parameters(), lr=Config.lr_init, momentum=Config.momentum, weight_decay=Config.weight_decay)
+    # optimizer = torch.optim.SGD(net.parameters(),
+    #                             lr=Config.lr_init,
+    #                             momentum=Config.momentum,
+    #                             weight_decay=Config.weight_decay)
     optimizer = torch.optim.Adam(net.parameters(), lr=Config.lr_init, weight_decay=Config.weight_decay)
 
     # from training
@@ -118,12 +125,11 @@ def train():
             optimizer.step()
 
             if (index + 1) % Config.log_setp == 0:
-                print('epoch: {} || iter: {} || lr: {}'
-                      .format(epoch, index, optimizer.param_groups[0]['lr']))
-                print('target_pre_num: {} || target_next_num: {} || target_union_num: {}'
-                      .format(target_pre_num, target_next_num, target_union_num))
-                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'
-                      .format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
+                print('epoch: {} || iter: {} || lr: {}'.format(epoch, index, optimizer.param_groups[0]['lr']))
+                print('target_pre_num: {} || target_next_num: {} || target_union_num: {}'.format(
+                    target_pre_num, target_next_num, target_union_num))
+                print('loss_pre: {:.4f} || loss_next: {:.4f} || loss_union: {:.4f} || loss_sim: {:.4f} || loss: {:.4f}'.
+                      format(loss_pre.item(), loss_next.item(), loss_union.item(), loss_sim.item(), loss.item()))
                 log_index = len(dataloader) * epoch + index
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], log_index)
                 writer.add_scalar('loss/loss', loss.item(), log_index)
