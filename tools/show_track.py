@@ -84,7 +84,7 @@ def get_spaced_colors(n):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Plot Images from Results')
-    parser.add_argument('--type', default='train')
+    parser.add_argument('--type', required=True, help='train or test')
     args = parser.parse_args()
 
     main(args)

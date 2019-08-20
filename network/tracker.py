@@ -188,7 +188,7 @@ class SSTTracker:
         else:
             # similarity between track and detection    track_num * det_num + 1
             similarity = self.get_similarity(frame_index, self.recorder, valid_index)
-            print(similarity)
+            # print(similarity)
             additional = torch.repeat_interleave(similarity[:, -1].reshape(track_num, 1), track_num - 1, dim=1)
             similarity = torch.cat([similarity, additional], dim=1).detach().cpu().numpy()
 

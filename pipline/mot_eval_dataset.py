@@ -20,6 +20,8 @@ class MOTEvalDataset(torch.utils.data.Dataset):
         self.image_format = os.path.join(self.image_folder, '{0:06d}.jpg')
         self.detection = pd.read_csv(self.detection_file_name, header=None)
         self.detection = self.detection[self.detection[6] > Config.low_confidence]
+        mask = [label in Config.valid_label for label in self.detection[7]]
+        self.detection = self.detection[mask]
         self.detection_group = self.detection.groupby(0)
         self.detection_group_keys = list(self.detection_group.indices.keys())
 

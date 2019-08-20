@@ -6,11 +6,12 @@
 
 import os
 import pandas as pd
+import argparse
 from config import EvalConfig as Config
 
 
-def main():
-    data_root = os.path.join(Config.data_root, 'test')
+def main(args):
+    data_root = os.path.join(Config.data_root, args.type)
     video_list = os.listdir(data_root)
     max_object = 0
     for video_name in video_list:
@@ -30,4 +31,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--type', required=True, help='train or test')
+    args = parser.parse_args()
+    main(args)

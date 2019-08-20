@@ -53,9 +53,8 @@ class SSTLoss(object):
         loss_pre = FocalLoss()(predict_pre, target_pre, target_pre_num)
         loss_next = FocalLoss()(predict_next, target_next, target_next_num)
         loss_union = FocalLoss()(predict_union, target_union, target_union_num)
-        loss_unmatched = FocalLoss()(predict_pre[:, :, :, -1], target_pre[:, :, :, -1], target_pre_num - target_union_num) \
-                         + FocalLoss()(predict_next[:, :, -1, :], target_next[:, :, -1, :], target_next_num - target_union_num)
-        loss_sim = 2 * (target_union * torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
+        loss_sim = 2 * (target_union *
+                        torch.abs(predict_pre[:, :, :, :-1] - predict_next[:, :, :-1, :])).sum() / target_union_num
         loss = (loss_pre + loss_next + loss_union + loss_sim) / 4.0
         return loss_pre, loss_next, loss_union, loss_sim, loss, target_pre_num, target_next_num, target_union_num
 

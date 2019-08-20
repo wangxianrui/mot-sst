@@ -52,7 +52,7 @@ def eval(args):
                 img = img.cuda()
                 det = det.cuda()
                 mask = mask.cuda()
-            print(i)
+            # print(i)
 
             # track
             tracker.update(img, det, mask, i)
@@ -64,7 +64,9 @@ def eval(args):
                     b = n.get_box(i, tracker.recorder)
                     # -1 for x, y, z
                     result.append([i + 1] + [t.id] + [b[0] * w, b[1] * h, b[2] * w, b[3] * h] + [b[4], -1, -1, -1])
-        np.savetxt(res_file, post_precessing(result), fmt='%.2f', delimiter=',')
+        result = post_precessing(result)
+        if result.shape[0] > 0:
+            np.savetxt(res_file, result, fmt='%.2f', delimiter=',')
         print('finished processing {}'.format(res_file))
 
 
@@ -80,7 +82,7 @@ def post_precessing(result):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type', default='test', help='eval train or test dataset')
+    parser.add_argument('--type', required=True, help='eval train or test dataset')
     args = parser.parse_args()
     with torch.no_grad():
         eval(args)

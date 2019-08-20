@@ -12,10 +12,11 @@ class Config:
     use_cuda = False
     mean_pixel = (127.5, 127.5, 127.5)
     sst_dim = 900
-    max_object = 8
+    max_object = 10
     image_size = (sst_dim, sst_dim)
     false_constant = 1
-    detector = ''  # DPM, SDP, FRCNN
+    # DPM, SDP, FRCNN select detector in mot17 dataset
+    detector = ''
 
 
 class TrainConfig(Config):
@@ -41,15 +42,13 @@ class TrainConfig(Config):
 
 
 class EvalConfig(Config):
-    model_path = 'pretrained/sst900_final.pth'
+    model_path = 'pretrained/sst900_mot.pth'
     result_dir = 'result'
-    max_track_frame = 5
-    # filter out
+    max_track_frame = 10
+    valid_label = [3, 68]  # 3 car, 68 phone
+    # confidence, low filter out, high keep
     low_confidence = 0.3
-    # add to track
     high_confidence = 0.8
-    # iou
-    iou_threshold = 0.3
     # max interval frames, and min duration
     max_interval = 50
     min_duration = 125

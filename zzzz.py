@@ -1,42 +1,47 @@
 '''
 @Author: rayenwang
-@Date: 2019-08-15 15:47:55
+@Date: 2019-08-20 10:15:30
 @Description: 
 '''
+# '''
+# @Author: rayenwang
+# @Date: 2019-08-16 17:51:41
+# @Description:
+# '''
 # """
 #     SORT: A Simple, Online and Realtime Tracker
 #     Copyright (C) 2016 Alex Bewley alex@dynamicdetection.com
+
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
+
 #     This program is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
+
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # """
 # from __future__ import print_function
 
-# from numba import jit
 # import os.path
 # import numpy as np
 # import matplotlib.pyplot as plt
 # import matplotlib.patches as patches
 # from skimage import io
-# from scipy.optimize import linear_sum_assignment
 # from sklearn.utils.linear_assignment_ import linear_assignment
 # import glob
 # import time
 # import argparse
 # from filterpy.kalman import KalmanFilter
 
-# @jit
 # def iou(bb_test, bb_gt):
 #     """
-#     Computes IUO between two bboxes in the form [x1,y1,x2,y2]
-#     """
+#   Computes IUO between two bboxes in the form [x1,y1,x2,y2]
+#   """
 #     xx1 = np.maximum(bb_test[0], bb_gt[0])
 #     yy1 = np.maximum(bb_test[1], bb_gt[1])
 #     xx2 = np.minimum(bb_test[2], bb_gt[2])
@@ -50,10 +55,10 @@
 
 # def convert_bbox_to_z(bbox):
 #     """
-#     Takes a bounding box in the form [x1,y1,x2,y2] and returns z in the form
-#         [x,y,s,r] where x,y is the centre of the box and s is the scale/area and r is
-#         the aspect ratio
-#     """
+#   Takes a bounding box in the form [x1,y1,x2,y2] and returns z in the form
+#     [x,y,s,r] where x,y is the centre of the box and s is the scale/area and r is
+#     the aspect ratio
+#   """
 #     w = bbox[2] - bbox[0]
 #     h = bbox[3] - bbox[1]
 #     x = bbox[0] + w / 2.
@@ -64,9 +69,9 @@
 
 # def convert_x_to_bbox(x, score=None):
 #     """
-#     Takes a bounding box in the centre form [x,y,s,r] and returns it in the form
-#         [x1,y1,x2,y2] where x1,y1 is the top left and x2,y2 is the bottom right
-#     """
+#   Takes a bounding box in the centre form [x,y,s,r] and returns it in the form
+#     [x1,y1,x2,y2] where x1,y1 is the top left and x2,y2 is the bottom right
+#   """
 #     w = np.sqrt(x[2] * x[3])
 #     h = x[2] / w
 #     if (score == None):
@@ -76,14 +81,14 @@
 
 # class KalmanBoxTracker(object):
 #     """
-#     This class represents the internel state of individual tracked objects observed as bbox.
-#     """
+#   This class represents the internel state of individual tracked objects observed as bbox.
+#   """
 #     count = 0
 
 #     def __init__(self, bbox):
 #         """
-#         Initialises a tracker using initial bounding box.
-#         """
+#     Initialises a tracker using initial bounding box.
+#     """
 #         #define constant velocity model
 #         self.kf = KalmanFilter(dim_x=7, dim_z=4)
 #         self.kf.F = np.array([[1, 0, 0, 0, 1, 0, 0], [0, 1, 0, 0, 0, 1, 0], [0, 0, 1, 0, 0, 0,
@@ -109,8 +114,8 @@
 
 #     def update(self, bbox):
 #         """
-#         Updates the state vector with observed bbox.
-#         """
+#     Updates the state vector with observed bbox.
+#     """
 #         self.time_since_update = 0
 #         self.history = []
 #         self.hits += 1
@@ -119,8 +124,8 @@
 
 #     def predict(self):
 #         """
-#         Advances the state vector and returns the predicted bounding box estimate.
-#         """
+#     Advances the state vector and returns the predicted bounding box estimate.
+#     """
 #         if ((self.kf.x[6] + self.kf.x[2]) <= 0):
 #             self.kf.x[6] *= 0.0
 #         self.kf.predict()
@@ -133,15 +138,16 @@
 
 #     def get_state(self):
 #         """
-#         Returns the current bounding box estimate.
-#         """
+#     Returns the current bounding box estimate.
+#     """
 #         return convert_x_to_bbox(self.kf.x)
 
 # def associate_detections_to_trackers(detections, trackers, iou_threshold=0.3):
 #     """
-#     Assigns detections to tracked object (both represented as bounding boxes)
-#     Returns 3 lists of matches, unmatched_detections and unmatched_trackers
-#     """
+#   Assigns detections to tracked object (both represented as bounding boxes)
+
+#   Returns 3 lists of matches, unmatched_detections and unmatched_trackers
+#   """
 #     if (len(trackers) == 0):
 #         return np.empty((0, 2), dtype=int), np.arange(len(detections)), np.empty((0, 5), dtype=int)
 #     iou_matrix = np.zeros((len(detections), len(trackers)), dtype=np.float32)
@@ -178,8 +184,8 @@
 # class Sort(object):
 #     def __init__(self, max_age=1, min_hits=3):
 #         """
-#         Sets key parameters for SORT
-#         """
+#     Sets key parameters for SORT
+#     """
 #         self.max_age = max_age
 #         self.min_hits = min_hits
 #         self.trackers = []
@@ -187,12 +193,13 @@
 
 #     def update(self, dets):
 #         """
-#         Params:
-#         dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
-#         Requires: this method must be called once for each frame even with empty detections.
-#         Returns the a similar array, where the last column is the object ID.
-#         NOTE: The number of objects returned may differ from the number of detections provided.
-#         """
+#     Params:
+#       dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
+#     Requires: this method must be called once for each frame even with empty detections.
+#     Returns the a similar array, where the last column is the object ID.
+
+#     NOTE: The number of objects returned may differ from the number of detections provided.
+#     """
 #         self.frame_count += 1
 #         #get predicted locations from existing trackers.
 #         trks = np.zeros((len(self.trackers), 5))
@@ -255,10 +262,9 @@
 #     colours = np.random.rand(32, 3)  #used only for display
 #     if (display):
 #         if not os.path.exists('mot_benchmark'):
-#             print('\n\tERROR: mot_benchmark link not found!\n\n'
-#                   'Create a symbolic link to the MOT benchmark\n'
-#                   '(https://motchallenge.net/data/2D_MOT_2015/#download). E.g.:\n\n'
-#                   '$ ln -s /path/to/MOT2015_challenge/2DMOT2015 mot_benchmark\n\n')
+#             print(
+#                 '\n\tERROR: mot_benchmark link not found!\n\n    Create a symbolic link to the MOT benchmark\n    (https://motchallenge.net/data/2D_MOT_2015/#download). E.g.:\n\n    $ ln -s /path/to/MOT2015_challenge/2DMOT2015 mot_benchmark\n\n'
+#             )
 #             exit()
 #         plt.ion()
 #         fig = plt.figure()
@@ -311,7 +317,9 @@
 #     print("Total Tracking took: %.3f for %d frames or %.1f FPS" % (total_time, total_frames, total_frames / total_time))
 #     if (display):
 #         print("Note: to get real runtime results run without the option: --display")
-
-import re
-import os
-print('10'.zfill(6))
+import pandas as pd
+detection_file_name = '../dataset/CAR/train/sequence_01/det/det.txt'
+detection = pd.read_csv(detection_file_name, header=None)
+mask = [label in [0] for label in detection[7]]
+detection = detection[mask]
+print(detection)

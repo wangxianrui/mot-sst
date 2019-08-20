@@ -8,7 +8,7 @@ import os
 import shutil
 from config import Config
 
-gt_dir = Config.data_root
+gt_dir = os.path.join(Config.data_root, 'train')
 gt_suffix = '.rec'
 img_suffix = '.jpg'
 
