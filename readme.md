@@ -91,13 +91,13 @@ EvalConfig: 测试参数
 
 sst_loss.py 计算训练loss
 sst.py forward过程, 包括 baseline, extractor, selector, final 四部分
-tracker.py predict阶段跟踪过程
+tracker.py 测试阶段跟踪过程
 
 ## pipline
 
 augmentations.py 训练过程数据增强
-mot_eval_dataset.py predict过程数据读入
-mot_train_dataset.py train过程数据读入
+mot_eval_dataset.py 测试过程数据读入
+mot_train_dataset.py 训练过程数据读入
 
 ## pretrained
 
